@@ -12,7 +12,7 @@ Do not treat assumptions or proposed designs as confirmed facts.
 # 1. Institute Information
 
 ## Official Name
-PLACEHOLDER — REPLACE WITH REAL FOXBRAIN INFORMATION
+PLACEHOLDER — REPLACE WITH REAL FOXBRAIN 
 
 ## Tagline
 PLACEHOLDER — REPLACE WITH REAL FOXBRAIN INFORMATION
