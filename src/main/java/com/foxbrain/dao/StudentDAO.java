@@ -13,45 +13,92 @@ import java.util.List;
 
 public class StudentDAO {
 
-    private Student mapResultSet(ResultSet rs) throws SQLException {
+    // =========================================================
+    // MAP RESULT SET
+    // =========================================================
+
+    private Student mapResultSet(ResultSet rs)
+            throws SQLException {
 
         Student student = new Student();
 
-        student.setId(rs.getLong("id"));
-        student.setUserId(rs.getLong("user_id"));
-        student.setAdmissionNumber(rs.getString("admission_number"));
+        student.setId(
+            rs.getLong("id")
+        );
 
+        student.setUserId(
+            rs.getLong("user_id")
+        );
+
+        student.setAdmissionNumber(
+            rs.getString("admission_number")
+        );
+
+        // Date of Birth
         if (rs.getDate("date_of_birth") != null) {
+
             student.setDateOfBirth(
-                rs.getDate("date_of_birth").toLocalDate()
+                rs.getDate("date_of_birth")
+                    .toLocalDate()
             );
         }
 
-        student.setGender(rs.getString("gender"));
-        student.setAddressLine1(rs.getString("address_line1"));
-        student.setAddressLine2(rs.getString("address_line2"));
-        student.setCity(rs.getString("city"));
-        student.setState(rs.getString("state"));
-        student.setPostalCode(rs.getString("postal_code"));
-        student.setCountry(rs.getString("country"));
+        student.setGender(
+            rs.getString("gender")
+        );
 
+        student.setAddressLine1(
+            rs.getString("address_line1")
+        );
+
+        student.setAddressLine2(
+            rs.getString("address_line2")
+        );
+
+        student.setCity(
+            rs.getString("city")
+        );
+
+        student.setState(
+            rs.getString("state")
+        );
+
+        student.setPostalCode(
+            rs.getString("postal_code")
+        );
+
+        student.setCountry(
+            rs.getString("country")
+        );
+
+        // Admission Date
         if (rs.getDate("admission_date") != null) {
+
             student.setAdmissionDate(
-                rs.getDate("admission_date").toLocalDate()
+                rs.getDate("admission_date")
+                    .toLocalDate()
             );
         }
 
-        student.setStatus(rs.getString("status"));
+        student.setStatus(
+            rs.getString("status")
+        );
 
+        // Created At
         if (rs.getTimestamp("created_at") != null) {
+
             student.setCreatedAt(
-                rs.getTimestamp("created_at").toLocalDateTime()
+                rs.getTimestamp("created_at")
+                    .toLocalDateTime()
             );
         }
 
+        // Updated At
         if (rs.getTimestamp("updated_at") != null) {
+
             student.setUpdatedAt(
-                rs.getTimestamp("updated_at").toLocalDateTime()
+                rs.getTimestamp("updated_at")
+                    .toLocalDateTime()
             );
         }
 
@@ -64,14 +111,18 @@ public class StudentDAO {
 
     public Student findById(long id) {
 
-        String sql = "SELECT * FROM students WHERE id = ?";
+        String sql =
+            "SELECT * FROM students WHERE id = ?";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con =
+                 DBConnection.getConnection();
+             PreparedStatement ps =
+                 con.prepareStatement(sql)) {
 
             ps.setLong(1, id);
 
-            try (ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs =
+                     ps.executeQuery()) {
 
                 if (rs.next()) {
                     return mapResultSet(rs);
@@ -85,7 +136,8 @@ public class StudentDAO {
             e.printStackTrace();
 
             throw new RuntimeException(
-                "Error finding student by ID: " + e.getMessage(),
+                "Error finding student by ID: "
+                + e.getMessage(),
                 e
             );
         }
@@ -97,16 +149,24 @@ public class StudentDAO {
 
     public List<Student> findAll() {
 
-        String sql = "SELECT * FROM students ORDER BY id DESC";
+        String sql =
+            "SELECT * FROM students ORDER BY id DESC";
 
-        List<Student> students = new ArrayList<>();
+        List<Student> students =
+            new ArrayList<>();
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con =
+                 DBConnection.getConnection();
+             PreparedStatement ps =
+                 con.prepareStatement(sql);
+             ResultSet rs =
+                 ps.executeQuery()) {
 
             while (rs.next()) {
-                students.add(mapResultSet(rs));
+
+                students.add(
+                    mapResultSet(rs)
+                );
             }
 
             return students;
@@ -116,7 +176,8 @@ public class StudentDAO {
             e.printStackTrace();
 
             throw new RuntimeException(
-                "Error finding all students: " + e.getMessage(),
+                "Error finding all students: "
+                + e.getMessage(),
                 e
             );
         }
@@ -126,17 +187,25 @@ public class StudentDAO {
     // FIND BY ADMISSION NUMBER
     // =========================================================
 
-    public Student findByAdmissionNumber(String admissionNumber) {
+    public Student findByAdmissionNumber(
+            String admissionNumber) {
 
         String sql =
-            "SELECT * FROM students WHERE admission_number = ?";
+            "SELECT * FROM students " +
+            "WHERE admission_number = ?";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con =
+                 DBConnection.getConnection();
+             PreparedStatement ps =
+                 con.prepareStatement(sql)) {
 
-            ps.setString(1, admissionNumber);
+            ps.setString(
+                1,
+                admissionNumber
+            );
 
-            try (ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs =
+                     ps.executeQuery()) {
 
                 if (rs.next()) {
                     return mapResultSet(rs);
@@ -159,6 +228,7 @@ public class StudentDAO {
 
     // =========================================================
     // INSERT STUDENT
+    // NORMAL CONNECTION
     // =========================================================
 
     public long insert(Student student) {
@@ -179,99 +249,41 @@ public class StudentDAO {
             "status" +
             ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(
-                 sql,
-                 Statement.RETURN_GENERATED_KEYS
-             )) {
+        try (Connection con =
+                 DBConnection.getConnection();
+             PreparedStatement ps =
+                 con.prepareStatement(
+                     sql,
+                     Statement.RETURN_GENERATED_KEYS
+                 )) {
 
-            int i = 1;
+            setStudentParameters(ps, student);
 
-            // user_id
-            ps.setLong(i++, student.getUserId());
-
-            // admission_number
-            ps.setString(i++, student.getAdmissionNumber());
-
-            // date_of_birth
-            if (student.getDateOfBirth() != null) {
-                ps.setDate(
-                    i++,
-                    java.sql.Date.valueOf(
-                        student.getDateOfBirth()
-                    )
-                );
-            } else {
-                ps.setNull(
-                    i++,
-                    java.sql.Types.DATE
-                );
-            }
-
-            // gender
-            ps.setString(i++, student.getGender());
-
-            // address_line1
-            ps.setString(i++, student.getAddressLine1());
-
-            // address_line2
-            ps.setString(i++, student.getAddressLine2());
-
-            // city
-            ps.setString(i++, student.getCity());
-
-            // state
-            ps.setString(i++, student.getState());
-
-            // postal_code
-            ps.setString(i++, student.getPostalCode());
-
-            // country
-            ps.setString(i++, student.getCountry());
-
-            // admission_date
-            if (student.getAdmissionDate() != null) {
-                ps.setDate(
-                    i++,
-                    java.sql.Date.valueOf(
-                        student.getAdmissionDate()
-                    )
-                );
-            } else {
-                ps.setNull(
-                    i++,
-                    java.sql.Types.DATE
-                );
-            }
-
-            // status
-            ps.setString(i++, student.getStatus());
-
-            // Execute INSERT
-            int affectedRows = ps.executeUpdate();
+            int affectedRows =
+                ps.executeUpdate();
 
             if (affectedRows == 0) {
+
                 throw new RuntimeException(
                     "Student could not be inserted."
                 );
             }
 
-            // Get generated student ID
-            try (ResultSet keys = ps.getGeneratedKeys()) {
+            try (ResultSet keys =
+                     ps.getGeneratedKeys()) {
 
                 if (keys.next()) {
                     return keys.getLong(1);
                 }
 
                 throw new RuntimeException(
-                    "Student was inserted, but generated ID was not returned."
+                    "Student was inserted, but generated ID "
+                    + "was not returned."
                 );
             }
 
         } catch (SQLException e) {
 
-            // VERY IMPORTANT:
-            // Print the real MySQL error in Eclipse Console.
             e.printStackTrace();
 
             throw new RuntimeException(
@@ -280,6 +292,182 @@ public class StudentDAO {
                 e
             );
         }
+    }
+
+    // =========================================================
+    // INSERT STUDENT
+    // EXISTING CONNECTION / TRANSACTION
+    // =========================================================
+
+    public long insert(
+            Connection con,
+            Student student) {
+
+        String sql =
+            "INSERT INTO students (" +
+            "user_id, " +
+            "admission_number, " +
+            "date_of_birth, " +
+            "gender, " +
+            "address_line1, " +
+            "address_line2, " +
+            "city, " +
+            "state, " +
+            "postal_code, " +
+            "country, " +
+            "admission_date, " +
+            "status" +
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps =
+                 con.prepareStatement(
+                     sql,
+                     Statement.RETURN_GENERATED_KEYS
+                 )) {
+
+            setStudentParameters(ps, student);
+
+            int affectedRows =
+                ps.executeUpdate();
+
+            if (affectedRows == 0) {
+
+                throw new RuntimeException(
+                    "Student could not be inserted."
+                );
+            }
+
+            try (ResultSet keys =
+                     ps.getGeneratedKeys()) {
+
+                if (keys.next()) {
+                    return keys.getLong(1);
+                }
+
+                throw new RuntimeException(
+                    "Student was inserted, but generated ID "
+                    + "was not returned."
+                );
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                "Error inserting student: "
+                + e.getMessage(),
+                e
+            );
+        }
+    }
+
+    // =========================================================
+    // SET STUDENT INSERT PARAMETERS
+    // =========================================================
+
+    private void setStudentParameters(
+            PreparedStatement ps,
+            Student student)
+            throws SQLException {
+
+        int i = 1;
+
+        // user_id
+        ps.setLong(
+            i++,
+            student.getUserId()
+        );
+
+        // admission_number
+        ps.setString(
+            i++,
+            student.getAdmissionNumber()
+        );
+
+        // date_of_birth
+        if (student.getDateOfBirth() != null) {
+
+            ps.setDate(
+                i++,
+                java.sql.Date.valueOf(
+                    student.getDateOfBirth()
+                )
+            );
+
+        } else {
+
+            ps.setNull(
+                i++,
+                java.sql.Types.DATE
+            );
+        }
+
+        // gender
+        ps.setString(
+            i++,
+            student.getGender()
+        );
+
+        // address_line1
+        ps.setString(
+            i++,
+            student.getAddressLine1()
+        );
+
+        // address_line2
+        ps.setString(
+            i++,
+            student.getAddressLine2()
+        );
+
+        // city
+        ps.setString(
+            i++,
+            student.getCity()
+        );
+
+        // state
+        ps.setString(
+            i++,
+            student.getState()
+        );
+
+        // postal_code
+        ps.setString(
+            i++,
+            student.getPostalCode()
+        );
+
+        // country
+        ps.setString(
+            i++,
+            student.getCountry()
+        );
+
+        // admission_date
+        if (student.getAdmissionDate() != null) {
+
+            ps.setDate(
+                i++,
+                java.sql.Date.valueOf(
+                    student.getAdmissionDate()
+                )
+            );
+
+        } else {
+
+            ps.setNull(
+                i++,
+                java.sql.Types.DATE
+            );
+        }
+
+        // status
+        ps.setString(
+            i++,
+            student.getStatus()
+        );
     }
 
     // =========================================================
@@ -304,54 +492,101 @@ public class StudentDAO {
             "status = ? " +
             "WHERE id = ?";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con =
+                 DBConnection.getConnection();
+             PreparedStatement ps =
+                 con.prepareStatement(sql)) {
 
             int i = 1;
 
-            ps.setLong(i++, student.getUserId());
+            ps.setLong(
+                i++,
+                student.getUserId()
+            );
 
-            ps.setString(i++, student.getAdmissionNumber());
+            ps.setString(
+                i++,
+                student.getAdmissionNumber()
+            );
 
             if (student.getDateOfBirth() != null) {
+
                 ps.setDate(
                     i++,
                     java.sql.Date.valueOf(
                         student.getDateOfBirth()
                     )
                 );
+
             } else {
+
                 ps.setNull(
                     i++,
                     java.sql.Types.DATE
                 );
             }
 
-            ps.setString(i++, student.getGender());
-            ps.setString(i++, student.getAddressLine1());
-            ps.setString(i++, student.getAddressLine2());
-            ps.setString(i++, student.getCity());
-            ps.setString(i++, student.getState());
-            ps.setString(i++, student.getPostalCode());
-            ps.setString(i++, student.getCountry());
+            ps.setString(
+                i++,
+                student.getGender()
+            );
+
+            ps.setString(
+                i++,
+                student.getAddressLine1()
+            );
+
+            ps.setString(
+                i++,
+                student.getAddressLine2()
+            );
+
+            ps.setString(
+                i++,
+                student.getCity()
+            );
+
+            ps.setString(
+                i++,
+                student.getState()
+            );
+
+            ps.setString(
+                i++,
+                student.getPostalCode()
+            );
+
+            ps.setString(
+                i++,
+                student.getCountry()
+            );
 
             if (student.getAdmissionDate() != null) {
+
                 ps.setDate(
                     i++,
                     java.sql.Date.valueOf(
                         student.getAdmissionDate()
                     )
                 );
+
             } else {
+
                 ps.setNull(
                     i++,
                     java.sql.Types.DATE
                 );
             }
 
-            ps.setString(i++, student.getStatus());
+            ps.setString(
+                i++,
+                student.getStatus()
+            );
 
-            ps.setLong(i++, student.getId());
+            ps.setLong(
+                i++,
+                student.getId()
+            );
 
             return ps.executeUpdate() > 0;
 
@@ -376,8 +611,10 @@ public class StudentDAO {
         String sql =
             "DELETE FROM students WHERE id = ?";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con =
+                 DBConnection.getConnection();
+             PreparedStatement ps =
+                 con.prepareStatement(sql)) {
 
             ps.setLong(1, id);
 

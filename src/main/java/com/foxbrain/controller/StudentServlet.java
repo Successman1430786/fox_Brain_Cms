@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.List;
 
 @WebServlet("/admin/students")
 public class StudentServlet extends HttpServlet {
@@ -25,9 +24,10 @@ public class StudentServlet extends HttpServlet {
         studentService = new StudentService();
     }
 
-    // =========================
+    // =========================================================
     // GET
-    // =========================
+    // =========================================================
+
     @Override
     protected void doGet(
             HttpServletRequest request,
@@ -40,56 +40,38 @@ public class StudentServlet extends HttpServlet {
             action = "list";
         }
 
-        try {
+        switch (action) {
 
-            switch (action) {
+            case "add":
+                showAddForm(request, response);
+                break;
 
-                case "list":
-                    listStudents(request, response);
-                    break;
+            case "edit":
+                showEditForm(request, response);
+                break;
 
-                case "add":
-                    showAddForm(request, response);
-                    break;
+            case "delete":
+                deleteStudent(request, response);
+                break;
 
-                case "edit":
-                    showEditForm(request, response);
-                    break;
-
-                case "delete":
-                    deleteStudent(request, response);
-                    break;
-
-                default:
-                    response.sendRedirect(
-                        request.getContextPath() + "/admin/students"
-                    );
-                    break;
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            request.setAttribute(
-                "errorMessage",
-                "An error occurred while processing the request."
-            );
-
-            request.getRequestDispatcher(
-                "/admin/students/list.jsp"
-            ).forward(request, response);
+            case "list":
+            default:
+                showStudentList(request, response);
+                break;
         }
     }
 
-    // =========================
+    // =========================================================
     // POST
-    // =========================
+    // =========================================================
+
     @Override
     protected void doPost(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
 
@@ -110,8 +92,9 @@ public class StudentServlet extends HttpServlet {
                     break;
 
                 default:
-                    response.sendRedirect(
-                        request.getContextPath() + "/admin/students"
+                    response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid action."
                     );
                     break;
             }
@@ -131,26 +114,45 @@ public class StudentServlet extends HttpServlet {
         }
     }
 
-    // =========================
-    // LIST STUDENTS
-    // =========================
-    private void listStudents(
+    // =========================================================
+    // SHOW STUDENT LIST
+    // =========================================================
+
+    private void showStudentList(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        List<Student> students = studentService.getAll();
+        try {
 
-        request.setAttribute("students", students);
+            request.setAttribute(
+                "students",
+                studentService.getAll()
+            );
 
-        request.getRequestDispatcher(
-            "/admin/students/list.jsp"
-        ).forward(request, response);
+            request.getRequestDispatcher(
+                "/admin/students/list.jsp"
+            ).forward(request, response);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                "errorMessage",
+                e.getMessage()
+            );
+
+            request.getRequestDispatcher(
+                "/admin/students/list.jsp"
+            ).forward(request, response);
+        }
     }
 
-    // =========================
+    // =========================================================
     // SHOW ADD FORM
-    // =========================
+    // =========================================================
+
     private void showAddForm(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -161,140 +163,46 @@ public class StudentServlet extends HttpServlet {
         ).forward(request, response);
     }
 
-    // =========================
+    // =========================================================
     // SHOW EDIT FORM
-    // =========================
+    // =========================================================
+
     private void showEditForm(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        String idParameter = request.getParameter("id");
+        String idParam =
+            request.getParameter("id");
 
-        if (idParameter == null || idParameter.trim().isEmpty()) {
+        if (idParam == null ||
+                idParam.trim().isEmpty()) {
 
-            response.sendRedirect(
-                request.getContextPath() + "/admin/students"
+            response.sendError(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "Student ID is required."
             );
 
             return;
         }
-
-        long id = Long.parseLong(idParameter);
-
-        Student student = studentService.getById(id);
-
-        if (student == null) {
-
-            request.setAttribute(
-                "errorMessage",
-                "Student not found."
-            );
-
-            listStudents(request, response);
-
-            return;
-        }
-
-        request.setAttribute("student", student);
-
-        request.getRequestDispatcher(
-            "/admin/students/edit.jsp"
-        ).forward(request, response);
-    }
-
-    // =========================
-    // CREATE STUDENT
-    // =========================
-    private void createStudent(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Student student = buildStudentFromRequest(request);
 
         try {
 
-            long studentId = studentService.create(student);
+            long id =
+                Long.parseLong(idParam);
 
-            if (studentId > 0) {
+            Student student =
+                studentService.getById(id);
 
-                response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/students?success=created"
+            if (student == null) {
+
+                response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Student not found."
                 );
 
-            } else {
-
-                request.setAttribute(
-                    "errorMessage",
-                    "Student could not be created."
-                );
-
-                request.getRequestDispatcher(
-                    "/admin/students/add.jsp"
-                ).forward(request, response);
+                return;
             }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            String message = e.getMessage();
-
-            if (message == null || message.trim().isEmpty()) {
-                message = "Unknown error while creating student.";
-            }
-
-            request.setAttribute(
-                "errorMessage",
-                message
-            );
-
-            request.getRequestDispatcher(
-                "/admin/students/add.jsp"
-            ).forward(request, response);
-        }
-    }
-
-    // =========================
-    // UPDATE STUDENT
-    // =========================
-    private void updateStudent(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String idParameter = request.getParameter("id");
-
-        if (idParameter == null || idParameter.trim().isEmpty()) {
-
-            response.sendRedirect(
-                request.getContextPath() + "/admin/students"
-            );
-
-            return;
-        }
-
-        Student student = buildStudentFromRequest(request);
-
-        student.setId(Long.parseLong(idParameter));
-
-        boolean updated = studentService.update(student);
-
-        if (updated) {
-
-            response.sendRedirect(
-                request.getContextPath()
-                + "/admin/students?success=updated"
-            );
-
-        } else {
-
-            request.setAttribute(
-                "errorMessage",
-                "Student could not be updated."
-            );
 
             request.setAttribute(
                 "student",
@@ -304,120 +212,403 @@ public class StudentServlet extends HttpServlet {
             request.getRequestDispatcher(
                 "/admin/students/edit.jsp"
             ).forward(request, response);
+
+        } catch (NumberFormatException e) {
+
+            response.sendError(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "Invalid student ID."
+            );
         }
     }
 
-    // =========================
+    // =========================================================
+    // CREATE STUDENT + USER ACCOUNT
+    // =========================================================
+
+    private void createStudent(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+
+            // -------------------------------------------------
+            // ACCOUNT INFORMATION
+            // -------------------------------------------------
+
+            String username =
+                getParameter(request, "username");
+
+            String email =
+                getParameter(request, "email");
+
+            String password =
+                request.getParameter("password");
+
+            String firstName =
+                getParameter(request, "firstName");
+
+            String lastName =
+                getParameter(request, "lastName");
+
+            String phone =
+                getParameter(request, "phone");
+
+            // -------------------------------------------------
+            // STUDENT INFORMATION
+            // -------------------------------------------------
+
+            Student student =
+                buildStudentFromRequest(request);
+
+            // -------------------------------------------------
+            // CREATE USER + STUDENT
+            // -------------------------------------------------
+
+            long studentId =
+                studentService.createStudentWithAccount(
+                    student,
+                    username,
+                    email,
+                    password,
+                    firstName,
+                    lastName,
+                    phone
+                );
+
+            // -------------------------------------------------
+            // SUCCESS
+            // -------------------------------------------------
+
+            response.sendRedirect(
+                request.getContextPath()
+                + "/admin/students?created="
+                + studentId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                "errorMessage",
+                e.getMessage()
+            );
+
+            request.getRequestDispatcher(
+                "/admin/students/add.jsp"
+            ).forward(request, response);
+        }
+    }
+
+    // =========================================================
+    // UPDATE STUDENT
+    // =========================================================
+
+    private void updateStudent(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+
+            String idParam =
+                request.getParameter("id");
+
+            if (idParam == null ||
+                    idParam.trim().isEmpty()) {
+
+                throw new IllegalArgumentException(
+                    "Student ID is required."
+                );
+            }
+
+            long id =
+                Long.parseLong(idParam);
+
+            Student student =
+                buildStudentFromRequest(request);
+
+            student.setId(id);
+
+            // -------------------------------------------------
+            // IMPORTANT
+            // For update we keep the existing user_id.
+            // -------------------------------------------------
+
+            String userIdParam =
+                request.getParameter("userId");
+
+            if (userIdParam == null ||
+                    userIdParam.trim().isEmpty()) {
+
+                throw new IllegalArgumentException(
+                    "Student user ID is required for update."
+                );
+            }
+
+            long userId =
+                Long.parseLong(userIdParam);
+
+            student.setUserId(userId);
+
+            boolean updated =
+                studentService.update(student);
+
+            if (!updated) {
+
+                throw new RuntimeException(
+                    "Student could not be updated."
+                );
+            }
+
+            response.sendRedirect(
+                request.getContextPath()
+                + "/admin/students?updated="
+                + id
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                "errorMessage",
+                e.getMessage()
+            );
+
+            request.getRequestDispatcher(
+                "/admin/students/edit.jsp"
+            ).forward(request, response);
+        }
+    }
+
+    // =========================================================
     // DELETE STUDENT
-    // =========================
+    // =========================================================
+
     private void deleteStudent(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        String idParameter = request.getParameter("id");
+        String idParam =
+            request.getParameter("id");
 
-        if (idParameter == null || idParameter.trim().isEmpty()) {
+        if (idParam == null ||
+                idParam.trim().isEmpty()) {
 
-            response.sendRedirect(
-                request.getContextPath() + "/admin/students"
+            response.sendError(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "Student ID is required."
             );
 
             return;
         }
 
-        long id = Long.parseLong(idParameter);
+        try {
 
-        boolean deleted = studentService.delete(id);
+            long id =
+                Long.parseLong(idParam);
 
-        if (deleted) {
+            boolean deleted =
+                studentService.delete(id);
 
-            response.sendRedirect(
-                request.getContextPath()
-                + "/admin/students?success=deleted"
+            if (deleted) {
+
+                response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/students?deleted="
+                    + id
+                );
+
+            } else {
+
+                response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/students?error="
+                    + "Student could not be deleted"
+                );
+            }
+
+        } catch (NumberFormatException e) {
+
+            response.sendError(
+                HttpServletResponse.SC_BAD_REQUEST,
+                "Invalid student ID."
             );
 
-        } else {
+        } catch (Exception e) {
+
+            e.printStackTrace();
 
             response.sendRedirect(
                 request.getContextPath()
-                + "/admin/students?error=delete"
+                + "/admin/students?error="
+                + "Unable to delete student"
             );
         }
     }
 
-    // =========================
-    // BUILD STUDENT OBJECT
-    // =========================
+    // =========================================================
+    // BUILD STUDENT FROM REQUEST
+    // =========================================================
+
     private Student buildStudentFromRequest(
             HttpServletRequest request) {
 
-        Student student = new Student();
+        Student student =
+            new Student();
 
-        String userId = request.getParameter("userId");
-
-        if (userId != null && !userId.trim().isEmpty()) {
-            student.setUserId(Long.parseLong(userId));
-        }
+        // -----------------------------------------------------
+        // Admission Number
+        // -----------------------------------------------------
 
         student.setAdmissionNumber(
-            request.getParameter("admissionNumber")
+            getParameter(
+                request,
+                "admissionNumber"
+            )
         );
 
-        String dateOfBirth =
-            request.getParameter("dateOfBirth");
+        // -----------------------------------------------------
+        // Date of Birth
+        // -----------------------------------------------------
 
-        if (dateOfBirth != null &&
-            !dateOfBirth.trim().isEmpty()) {
+        String dob =
+            getParameter(
+                request,
+                "dateOfBirth"
+            );
+
+        if (dob != null &&
+                !dob.isEmpty()) {
 
             student.setDateOfBirth(
-                LocalDate.parse(dateOfBirth)
+                LocalDate.parse(dob)
             );
         }
 
+        // -----------------------------------------------------
+        // Gender
+        // -----------------------------------------------------
+
         student.setGender(
-            request.getParameter("gender")
+            getParameter(
+                request,
+                "gender"
+            )
         );
 
+        // -----------------------------------------------------
+        // Address
+        // -----------------------------------------------------
+
         student.setAddressLine1(
-            request.getParameter("addressLine1")
+            getParameter(
+                request,
+                "addressLine1"
+            )
         );
 
         student.setAddressLine2(
-            request.getParameter("addressLine2")
+            getParameter(
+                request,
+                "addressLine2"
+            )
         );
 
         student.setCity(
-            request.getParameter("city")
+            getParameter(
+                request,
+                "city"
+            )
         );
 
         student.setState(
-            request.getParameter("state")
+            getParameter(
+                request,
+                "state"
+            )
         );
 
         student.setPostalCode(
-            request.getParameter("postalCode")
+            getParameter(
+                request,
+                "postalCode"
+            )
         );
 
         student.setCountry(
-            request.getParameter("country")
+            getParameter(
+                request,
+                "country"
+            )
         );
 
+        // -----------------------------------------------------
+        // Admission Date
+        // -----------------------------------------------------
+
         String admissionDate =
-            request.getParameter("admissionDate");
+            getParameter(
+                request,
+                "admissionDate"
+            );
 
         if (admissionDate != null &&
-            !admissionDate.trim().isEmpty()) {
+                !admissionDate.isEmpty()) {
 
             student.setAdmissionDate(
-                LocalDate.parse(admissionDate)
+                LocalDate.parse(
+                    admissionDate
+                )
             );
         }
 
-        student.setStatus(
-            request.getParameter("status")
-        );
+        // -----------------------------------------------------
+        // Status
+        // -----------------------------------------------------
+
+        String status =
+            getParameter(
+                request,
+                "status"
+            );
+
+        if (status == null ||
+                status.isEmpty()) {
+
+            status = "ACTIVE";
+        }
+
+        student.setStatus(status);
 
         return student;
+    }
+
+    // =========================================================
+    // GET CLEAN PARAMETER
+    // =========================================================
+
+    private String getParameter(
+            HttpServletRequest request,
+            String name) {
+
+        String value =
+            request.getParameter(name);
+
+        if (value == null) {
+            return null;
+        }
+
+        value = value.trim();
+
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        return value;
     }
 }

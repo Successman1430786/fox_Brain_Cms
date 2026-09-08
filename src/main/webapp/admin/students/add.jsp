@@ -1,34 +1,26 @@
-<%@ page language="java"
-    contentType="text/html; charset=UTF-8"
+<%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
 <%
-    // Security check
     if (session.getAttribute("loggedInUser") == null) {
-        response.sendRedirect(
-            request.getContextPath() + "/login.jsp"
-        );
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
         return;
     }
 
     String errorMessage =
-        (String) request.getAttribute("errorMessage"); 	
+        (String) request.getAttribute("errorMessage");
 %>
 
-
-
-
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Add Student - FoxBrain Admin</title>
 
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -40,54 +32,62 @@
             color: #222;
         }
 
-        .header {
-            height: 65px;
-            background: #1e293b;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-        }
-
-        .header h2 {
-            margin: 0;
-        }
-
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 30px auto;
             padding: 0 20px;
         }
 
-        .page-title {
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
 
-        .page-title h1 {
+        .page-header h1 {
             margin: 0;
+            font-size: 28px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #333;
+            background: #e9edf3;
+            padding: 10px 16px;
+            border-radius: 6px;
+        }
+
+        .back-link:hover {
+            background: #dfe4eb;
+        }
+
+        .error {
+            background: #fde8e8;
+            color: #b42318;
+            border: 1px solid #f5b5b5;
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 20px;
         }
 
         .card {
             background: white;
             border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 25px;
             margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .section-title {
+        .card h2 {
             margin-top: 0;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e5e7eb;
-            color: #1e293b;
+            font-size: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
         }
 
-        .form-grid {
+        .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 18px;
@@ -98,461 +98,516 @@
             flex-direction: column;
         }
 
-        .form-group.full {
+        .full {
             grid-column: 1 / -1;
         }
 
         label {
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 7px;
-            font-size: 14px;
+        }
+
+        .required {
+            color: #d92d20;
         }
 
         input,
         select,
         textarea {
+            width: 100%;
             padding: 11px 12px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #cfd5dd;
             border-radius: 6px;
             font-size: 14px;
-            font-family: Arial, sans-serif;
+            background: white;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
         }
 
         input:focus,
         select:focus,
         textarea:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: #4f46e5;
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .required {
-            color: #dc2626;
-        }
-
-        .alert {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
+        .help-text {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
         }
 
         .actions {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .btn {
-            display: inline-block;
-            padding: 11px 18px;
-            border-radius: 6px;
             border: none;
+            border-radius: 6px;
+            padding: 11px 20px;
+            font-size: 14px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 14px;
+        }
+
+        .btn-cancel {
+            background: #e9edf3;
+            color: #333;
         }
 
         .btn-primary {
-            background: #2563eb;
+            background: #4f46e5;
             color: white;
         }
 
-        .btn-secondary {
-            background: #64748b;
-            color: white;
+        .btn-primary:hover {
+            background: #4338ca;
         }
 
         @media (max-width: 700px) {
-
-            .form-grid {
+            .grid {
                 grid-template-columns: 1fr;
             }
 
-            .form-group.full {
+            .full {
                 grid-column: auto;
             }
 
-            .container {
-                padding: 0 10px;
-            }
-
-            .card {
-                padding: 20px;
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
         }
-
     </style>
-
 </head>
 
 <body>
 
-    <!-- HEADER -->
+<div class="container">
 
-    <div class="header">
+    <!-- PAGE HEADER -->
+    <div class="page-header">
 
-        <h2>FoxBrain Admin</h2>
+        <h1>Add Student</h1>
 
-        <a
-            href="<%= request.getContextPath() %>/admin/dashboard.jsp"
-            class="btn"
-            style="color:white;"
-        >
-            Dashboard
+        <a class="back-link"
+           href="<%= request.getContextPath() %>/admin/students">
+            ← Back to Students
         </a>
 
     </div>
 
 
-    <div class="container">
+    <!-- ERROR MESSAGE -->
+    <% if (errorMessage != null && !errorMessage.isEmpty()) { %>
 
-        <!-- PAGE TITLE -->
+        <div class="error">
+            <strong>Error:</strong>
+            <%= errorMessage %>
+        </div>
 
-        <div class="page-title">
+    <% } %>
 
-            <h1>Add Student</h1>
 
-            <a
-                href="<%= request.getContextPath() %>/admin/students"
-                class="btn btn-secondary"
-            >
-                ← Back to Students
-            </a>
+    <!-- =====================================================
+         STUDENT ACCOUNT
+         ===================================================== -->
+
+    <div class="card">
+
+        <h2>Student Account</h2>
+
+        <div class="grid">
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    form="studentForm"
+                    maxlength="100"
+                    required
+                    placeholder="Enter username">
+
+                <div class="help-text">
+                    This username will be used for student login.
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="email">
+                    Email <span class="required">*</span>
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    form="studentForm"
+                    maxlength="150"
+                    required
+                    placeholder="student@example.com">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password <span class="required">*</span>
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    form="studentForm"
+                    required
+                    placeholder="Enter temporary password">
+
+                <div class="help-text">
+                    The password will be securely hashed before storage.
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="phone">
+                    Phone
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    form="studentForm"
+                    maxlength="30"
+                    placeholder="Enter phone number">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="firstName">
+                    First Name <span class="required">*</span>
+                </label>
+
+                <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    form="studentForm"
+                    maxlength="100"
+                    required
+                    placeholder="Enter first name">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="lastName">
+                    Last Name
+                </label>
+
+                <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    form="studentForm"
+                    maxlength="100"
+                    placeholder="Enter last name">
+
+            </div>
 
         </div>
 
+    </div>
 
-        <!-- ERROR MESSAGE -->
 
-        <% if (errorMessage != null &&
-               !errorMessage.trim().isEmpty()) { %>
+    <!-- =====================================================
+         STUDENT INFORMATION
+         ===================================================== -->
 
-            <div class="alert">
-                <%= errorMessage %>
-            </div>
+    <div class="card">
 
-        <% } %>
-
+        <h2>Student Information</h2>
 
         <form
+            id="studentForm"
             method="post"
-            action="<%= request.getContextPath() %>/admin/students"
-        >
+            action="<%= request.getContextPath() %>/admin/students">
 
             <input
                 type="hidden"
                 name="action"
-                value="create"
-            >
+                value="create">
 
 
-            <!-- ACCOUNT SECTION -->
+            <div class="grid">
 
-            <div class="card">
+                <!-- Admission Number -->
 
-                <h2 class="section-title">
-                    Student Account
-                </h2>
+                <div class="form-group">
 
-                <div class="form-grid">
+                    <label for="admissionNumber">
+                        Admission Number
+                        <span class="required">*</span>
+                    </label>
 
-                    <div class="form-group">
-
-                        <label>
-                            User ID <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="number"
-                            name="userId"
-                            min="1"
-                            required
-                            placeholder="Enter existing user ID"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Username
-                        </label>
-
-                        <input
-                            type="text"
-                            placeholder="Student username"
-                            disabled
-                        >
-
-                    </div>
+                    <input
+                        type="text"
+                        id="admissionNumber"
+                        name="admissionNumber"
+                        maxlength="50"
+                        required
+                        placeholder="e.g. FB2026001">
 
                 </div>
 
-                <p style="color:#64748b; font-size:13px; margin-bottom:0;">
-                    The User ID connects this student profile to a record
-                    in the users table. We will automate account creation
-                    in the next improvement.
-                </p>
 
-            </div>
+                <!-- Admission Date -->
 
+                <div class="form-group">
 
-            <!-- STUDENT INFORMATION -->
+                    <label for="admissionDate">
+                        Admission Date
+                    </label>
 
-            <div class="card">
-
-                <h2 class="section-title">
-                    Student Information
-                </h2>
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-
-                        <label>
-                            Admission Number
-                            <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            name="admissionNumber"
-                            maxlength="50"
-                            required
-                            placeholder="Example: FB2026001"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Admission Date
-                        </label>
-
-                        <input
-                            type="date"
-                            name="admissionDate"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Date of Birth
-                        </label>
-
-                        <input
-                            type="date"
-                            name="dateOfBirth"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Gender
-                        </label>
-
-                        <select name="gender">
-
-                            <option value="">
-                                Select Gender
-                            </option>
-
-                            <option value="Male">
-                                Male
-                            </option>
-
-                            <option value="Female">
-                                Female
-                            </option>
-
-                            <option value="Other">
-                                Other
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Status
-                        </label>
-
-                        <select name="status">
-
-                            <option value="ACTIVE">
-                                Active
-                            </option>
-
-                            <option value="INACTIVE">
-                                Inactive
-                            </option>
-
-                            <option value="SUSPENDED">
-                                Suspended
-                            </option>
-
-                            <option value="GRADUATED">
-                                Graduated
-                            </option>
-
-                        </select>
-
-                    </div>
+                    <input
+                        type="date"
+                        id="admissionDate"
+                        name="admissionDate">
 
                 </div>
 
-            </div>
+
+                <!-- Date of Birth -->
+
+                <div class="form-group">
+
+                    <label for="dateOfBirth">
+                        Date of Birth
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dateOfBirth"
+                        name="dateOfBirth">
+
+                </div>
 
 
-            <!-- ADDRESS -->
+                <!-- Gender -->
 
-            <div class="card">
+                <div class="form-group">
 
-                <h2 class="section-title">
-                    Address Information
-                </h2>
+                    <label for="gender">
+                        Gender
+                    </label>
 
-                <div class="form-grid">
+                    <select
+                        id="gender"
+                        name="gender">
 
-                    <div class="form-group full">
+                        <option value="">
+                            Select Gender
+                        </option>
 
-                        <label>
-                            Address Line 1
-                        </label>
+                        <option value="Male">
+                            Male
+                        </option>
 
-                        <input
-                            type="text"
-                            name="addressLine1"
-                            maxlength="255"
-                            placeholder="House / Street / Area"
-                        >
+                        <option value="Female">
+                            Female
+                        </option>
 
-                    </div>
+                        <option value="Other">
+                            Other
+                        </option>
 
+                    </select>
 
-                    <div class="form-group full">
-
-                        <label>
-                            Address Line 2
-                        </label>
-
-                        <input
-                            type="text"
-                            name="addressLine2"
-                            maxlength="255"
-                            placeholder="Apartment / Landmark"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <div class="form-group">
+                <!-- Status -->
 
-                        <label>
-                            City
-                        </label>
+                <div class="form-group">
 
-                        <input
-                            type="text"
-                            name="city"
-                            maxlength="100"
-                            placeholder="City"
-                        >
+                    <label for="status">
+                        Status
+                    </label>
 
-                    </div>
+                    <select
+                        id="status"
+                        name="status">
 
+                        <option value="ACTIVE">
+                            Active
+                        </option>
 
-                    <div class="form-group">
+                        <option value="INACTIVE">
+                            Inactive
+                        </option>
 
-                        <label>
-                            State
-                        </label>
+                        <option value="SUSPENDED">
+                            Suspended
+                        </option>
 
-                        <input
-                            type="text"
-                            name="state"
-                            maxlength="100"
-                            placeholder="State"
-                        >
+                        <option value="GRADUATED">
+                            Graduated
+                        </option>
 
-                    </div>
+                    </select>
 
-
-                    <div class="form-group">
-
-                        <label>
-                            Postal Code
-                        </label>
-
-                        <input
-                            type="text"
-                            name="postalCode"
-                            maxlength="20"
-                            placeholder="Postal Code"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <div class="form-group">
+                <!-- Country -->
 
-                        <label>
-                            Country
-                        </label>
+                <div class="form-group">
 
-                        <input
-                            type="text"
-                            name="country"
-                            maxlength="100"
-                            value="India"
-                        >
+                    <label for="country">
+                        Country
+                    </label>
 
-                    </div>
+                    <input
+                        type="text"
+                        id="country"
+                        name="country"
+                        maxlength="100"
+                        value="India"
+                        placeholder="Enter country">
+
+                </div>
+
+
+                <!-- Address Line 1 -->
+
+                <div class="form-group full">
+
+                    <label for="addressLine1">
+                        Address Line 1
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addressLine1"
+                        name="addressLine1"
+                        maxlength="255"
+                        placeholder="House number, street, area">
+
+                </div>
+
+
+                <!-- Address Line 2 -->
+
+                <div class="form-group full">
+
+                    <label for="addressLine2">
+                        Address Line 2
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addressLine2"
+                        name="addressLine2"
+                        maxlength="255"
+                        placeholder="Landmark, apartment, etc.">
+
+                </div>
+
+
+                <!-- City -->
+
+                <div class="form-group">
+
+                    <label for="city">
+                        City
+                    </label>
+
+                    <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        maxlength="100"
+                        placeholder="Enter city">
+
+                </div>
+
+
+                <!-- State -->
+
+                <div class="form-group">
+
+                    <label for="state">
+                        State
+                    </label>
+
+                    <input
+                        type="text"
+                        id="state"
+                        name="state"
+                        maxlength="100"
+                        placeholder="Enter state">
+
+                </div>
+
+
+                <!-- Postal Code -->
+
+                <div class="form-group">
+
+                    <label for="postalCode">
+                        Postal Code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="postalCode"
+                        name="postalCode"
+                        maxlength="20"
+                        placeholder="Enter postal code">
 
                 </div>
 
             </div>
 
 
-            <!-- BUTTONS -->
+            <!-- ACTIONS -->
 
-            <div class="card">
+            <div class="actions">
 
-                <div class="actions">
+                <a
+                    href="<%= request.getContextPath() %>/admin/students"
+                    class="btn btn-cancel">
+                    Cancel
+                </a>
 
-                    <a
-                        href="<%= request.getContextPath() %>/admin/students"
-                        class="btn btn-secondary"
-                    >
-                        Cancel
-                    </a>
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Save Student
-                    </button>
-
-                </div>
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+                    Create Student
+                </button>
 
             </div>
 
@@ -560,5 +615,7 @@
 
     </div>
 
+</div>
+
 </body>
-</html>        		     		
+</html>
