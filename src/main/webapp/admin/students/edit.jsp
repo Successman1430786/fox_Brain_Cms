@@ -598,8 +598,7 @@
                     type="submit"
                     class="btn btn-primary">
 
-                    Update Student
-
+                    Update 
                 </button>
 
             </div>
