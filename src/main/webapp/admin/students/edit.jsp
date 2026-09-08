@@ -1,23 +1,16 @@
-<%@ page language="java"
-    contentType="text/html; charset=UTF-8"
+<%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
 <%@ page import="com.foxbrain.model.Student" %>
 
 <%
-    // Security check
     if (session.getAttribute("loggedInUser") == null) {
-        response.sendRedirect(
-            request.getContextPath() + "/login.jsp"
-        );
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
         return;
     }
 
     Student student =
         (Student) request.getAttribute("student");
-
-    String errorMessage =
-        (String) request.getAttribute("errorMessage");
 
     if (student == null) {
         response.sendRedirect(
@@ -25,13 +18,20 @@
         );
         return;
     }
+
+    String errorMessage =
+        (String) request.getAttribute("errorMessage");
 %>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Edit Student - FoxBrain Admin</title>
 
@@ -48,54 +48,62 @@
             color: #222;
         }
 
-        .header {
-            height: 65px;
-            background: #1e293b;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-        }
-
-        .header h2 {
-            margin: 0;
-        }
-
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 30px auto;
             padding: 0 20px;
         }
 
-        .page-title {
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
 
-        .page-title h1 {
+        .page-header h1 {
             margin: 0;
+            font-size: 28px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #333;
+            background: #e9edf3;
+            padding: 10px 16px;
+            border-radius: 6px;
+        }
+
+        .back-link:hover {
+            background: #dfe4eb;
+        }
+
+        .error {
+            background: #fde8e8;
+            color: #b42318;
+            border: 1px solid #f5b5b5;
+            padding: 14px;
+            border-radius: 6px;
+            margin-bottom: 20px;
         }
 
         .card {
             background: white;
             border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 25px;
             margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
 
-        .section-title {
+        .card h2 {
             margin-top: 0;
             margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e5e7eb;
-            color: #1e293b;
+            font-size: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
         }
 
-        .form-grid {
+        .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 18px;
@@ -106,87 +114,87 @@
             flex-direction: column;
         }
 
-        .form-group.full {
+        .full {
             grid-column: 1 / -1;
         }
 
         label {
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 7px;
-            font-size: 14px;
         }
 
         input,
         select {
+            width: 100%;
             padding: 11px 12px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #cfd5dd;
             border-radius: 6px;
             font-size: 14px;
-            font-family: Arial, sans-serif;
+            background: white;
         }
 
         input:focus,
         select:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: #4f46e5;
         }
 
-        .required {
-            color: #dc2626;
+        .readonly-box {
+            background: #f1f3f5;
+            color: #555;
         }
 
-        .alert {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
+        .help-text {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
         }
 
         .actions {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 12px;
+            margin-top: 10px;
         }
 
         .btn {
-            display: inline-block;
-            padding: 11px 18px;
-            border-radius: 6px;
             border: none;
+            border-radius: 6px;
+            padding: 11px 20px;
+            font-size: 14px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 14px;
+        }
+
+        .btn-cancel {
+            background: #e9edf3;
+            color: #333;
         }
 
         .btn-primary {
-            background: #2563eb;
+            background: #4f46e5;
             color: white;
         }
 
-        .btn-secondary {
-            background: #64748b;
-            color: white;
+        .btn-primary:hover {
+            background: #4338ca;
         }
 
         @media (max-width: 700px) {
 
-            .form-grid {
+            .grid {
                 grid-template-columns: 1fr;
             }
 
-            .form-group.full {
+            .full {
                 grid-column: auto;
             }
 
-            .container {
-                padding: 0 10px;
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
             }
-
-            .card {
-                padding: 20px;
-            }
-
         }
 
     </style>
@@ -195,374 +203,379 @@
 
 <body>
 
-    <!-- HEADER -->
+<div class="container">
 
-    <div class="header">
+    <!-- PAGE HEADER -->
 
-        <h2>FoxBrain Admin</h2>
+    <div class="page-header">
+
+        <h1>Edit Student</h1>
 
         <a
-            href="<%= request.getContextPath() %>/admin/dashboard.jsp"
-            class="btn"
-            style="color:white;"
-        >
-            Dashboard
+            class="back-link"
+            href="<%= request.getContextPath() %>/admin/students">
+
+            ← Back to Students
+
         </a>
 
     </div>
 
 
-    <div class="container">
+    <!-- ERROR -->
 
-        <!-- PAGE TITLE -->
+    <% if (errorMessage != null &&
+           !errorMessage.isEmpty()) { %>
 
-        <div class="page-title">
+        <div class="error">
 
-            <h1>Edit Student</h1>
+            <strong>Error:</strong>
 
-            <a
-                href="<%= request.getContextPath() %>/admin/students"
-                class="btn btn-secondary"
-            >
-                ← Back to Students
-            </a>
+            <%= errorMessage %>
 
         </div>
 
+    <% } %>
 
-        <!-- ERROR -->
 
-        <% if (errorMessage != null &&
-               !errorMessage.trim().isEmpty()) { %>
+    <!-- =====================================================
+         STUDENT ACCOUNT REFERENCE
+         ===================================================== -->
 
-            <div class="alert">
-                <%= errorMessage %>
+    <div class="card">
+
+        <h2>Student Account</h2>
+
+        <div class="grid">
+
+            <div class="form-group">
+
+                <label>Student User ID</label>
+
+                <input
+                    type="text"
+                    class="readonly-box"
+                    value="<%= student.getUserId() %>"
+                    readonly>
+
+                <div class="help-text">
+                    This account is permanently linked to this
+                    student profile.
+                </div>
+
             </div>
 
-        <% } %>
 
+            <div class="form-group">
+
+                <label>Student ID</label>
+
+                <input
+                    type="text"
+                    class="readonly-box"
+                    value="<%= student.getId() %>"
+                    readonly>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         STUDENT INFORMATION
+         ===================================================== -->
+
+    <div class="card">
+
+        <h2>Student Information</h2>
 
         <form
             method="post"
-            action="<%= request.getContextPath() %>/admin/students"
-        >
+            action="<%= request.getContextPath() %>/admin/students">
 
             <input
                 type="hidden"
                 name="action"
-                value="update"
-            >
+                value="update">
 
             <input
                 type="hidden"
                 name="id"
-                value="<%= student.getId() %>"
-            >
+                value="<%= student.getId() %>">
+
+            <input
+                type="hidden"
+                name="userId"
+                value="<%= student.getUserId() %>">
 
 
-            <!-- ACCOUNT INFORMATION -->
-
-            <div class="card">
-
-                <h2 class="section-title">
-                    Student Account
-                </h2>
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-
-                        <label>
-                            Student ID
-                        </label>
-
-                        <input
-                            type="text"
-                            value="<%= student.getId() %>"
-                            readonly
-                        >
-
-                    </div>
+            <div class="grid">
 
 
-                    <div class="form-group">
+                <!-- ADMISSION NUMBER -->
 
-                        <label>
-                            User ID
-                            <span class="required">*</span>
-                        </label>
+                <div class="form-group">
 
-                        <input
-                            type="number"
-                            name="userId"
-                            min="1"
-                            required
-                            value="<%= student.getUserId() %>"
-                        >
+                    <label for="admissionNumber">
+                        Admission Number
+                    </label>
 
-                    </div>
+                    <input
+                        type="text"
+                        id="admissionNumber"
+                        name="admissionNumber"
+                        maxlength="50"
+                        value="<%= student.getAdmissionNumber() != null
+                            ? student.getAdmissionNumber()
+                            : "" %>"
+                        required>
 
                 </div>
 
-            </div>
 
+                <!-- ADMISSION DATE -->
 
-            <!-- STUDENT INFORMATION -->
+                <div class="form-group">
 
-            <div class="card">
+                    <label for="admissionDate">
+                        Admission Date
+                    </label>
 
-                <h2 class="section-title">
-                    Student Information
-                </h2>
-
-                <div class="form-grid">
-
-                    <div class="form-group">
-
-                        <label>
-                            Admission Number
-                            <span class="required">*</span>
-                        </label>
-
-                        <input
-                            type="text"
-                            name="admissionNumber"
-                            maxlength="50"
-                            required
-                            value="<%= student.getAdmissionNumber() != null
-                                ? student.getAdmissionNumber()
-                                : "" %>"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Admission Date
-                        </label>
-
-                        <input
-                            type="date"
-                            name="admissionDate"
-                            value="<%= student.getAdmissionDate() != null
-                                ? student.getAdmissionDate()
-                                : "" %>"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Date of Birth
-                        </label>
-
-                        <input
-                            type="date"
-                            name="dateOfBirth"
-                            value="<%= student.getDateOfBirth() != null
-                                ? student.getDateOfBirth()
-                                : "" %>"
-                        >
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Gender
-                        </label>
-
-                        <select name="gender">
-
-                            <option value="">
-                                Select Gender
-                            </option>
-
-                            <option value="Male"
-                                <%= "Male".equals(student.getGender())
-                                    ? "selected" : "" %>>
-                                Male
-                            </option>
-
-                            <option value="Female"
-                                <%= "Female".equals(student.getGender())
-                                    ? "selected" : "" %>>
-                                Female
-                            </option>
-
-                            <option value="Other"
-                                <%= "Other".equals(student.getGender())
-                                    ? "selected" : "" %>>
-                                Other
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Status
-                        </label>
-
-                        <select name="status">
-
-                            <option value="ACTIVE"
-                                <%= "ACTIVE".equals(student.getStatus())
-                                    ? "selected" : "" %>>
-                                Active
-                            </option>
-
-                            <option value="INACTIVE"
-                                <%= "INACTIVE".equals(student.getStatus())
-                                    ? "selected" : "" %>>
-                                Inactive
-                            </option>
-
-                            <option value="SUSPENDED"
-                                <%= "SUSPENDED".equals(student.getStatus())
-                                    ? "selected" : "" %>>
-                                Suspended
-                            </option>
-
-                            <option value="GRADUATED"
-                                <%= "GRADUATED".equals(student.getStatus())
-                                    ? "selected" : "" %>>
-                                Graduated
-                            </option>
-
-                        </select>
-
-                    </div>
+                    <input
+                        type="date"
+                        id="admissionDate"
+                        name="admissionDate"
+                        value="<%= student.getAdmissionDate() != null
+                            ? student.getAdmissionDate()
+                            : "" %>">
 
                 </div>
 
-            </div>
+
+                <!-- DATE OF BIRTH -->
+
+                <div class="form-group">
+
+                    <label for="dateOfBirth">
+                        Date of Birth
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dateOfBirth"
+                        name="dateOfBirth"
+                        value="<%= student.getDateOfBirth() != null
+                            ? student.getDateOfBirth()
+                            : "" %>">
+
+                </div>
 
 
-            <!-- ADDRESS -->
+                <!-- GENDER -->
 
-            <div class="card">
+                <div class="form-group">
 
-                <h2 class="section-title">
-                    Address Information
-                </h2>
+                    <label for="gender">
+                        Gender
+                    </label>
 
-                <div class="form-grid">
+                    <select
+                        id="gender"
+                        name="gender">
 
-                    <div class="form-group full">
+                        <option value="">
+                            Select Gender
+                        </option>
 
-                        <label>
-                            Address Line 1
-                        </label>
+                        <option value="Male"
+                            <%= "Male".equals(student.getGender())
+                                ? "selected"
+                                : "" %>>
+                            Male
+                        </option>
 
-                        <input
-                            type="text"
-                            name="addressLine1"
-                            maxlength="255"
-                            value="<%= student.getAddressLine1() != null
-                                ? student.getAddressLine1()
-                                : "" %>"
-                        >
+                        <option value="Female"
+                            <%= "Female".equals(student.getGender())
+                                ? "selected"
+                                : "" %>>
+                            Female
+                        </option>
 
-                    </div>
+                        <option value="Other"
+                            <%= "Other".equals(student.getGender())
+                                ? "selected"
+                                : "" %>>
+                            Other
+                        </option>
 
+                    </select>
 
-                    <div class="form-group full">
-
-                        <label>
-                            Address Line 2
-                        </label>
-
-                        <input
-                            type="text"
-                            name="addressLine2"
-                            maxlength="255"
-                            value="<%= student.getAddressLine2() != null
-                                ? student.getAddressLine2()
-                                : "" %>"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <div class="form-group">
+                <!-- STATUS -->
 
-                        <label>
-                            City
-                        </label>
+                <div class="form-group">
 
-                        <input
-                            type="text"
-                            name="city"
-                            maxlength="100"
-                            value="<%= student.getCity() != null
-                                ? student.getCity()
-                                : "" %>"
-                        >
+                    <label for="status">
+                        Status
+                    </label>
 
-                    </div>
+                    <select
+                        id="status"
+                        name="status">
 
+                        <option value="ACTIVE"
+                            <%= "ACTIVE".equals(student.getStatus())
+                                ? "selected"
+                                : "" %>>
+                            Active
+                        </option>
 
-                    <div class="form-group">
+                        <option value="INACTIVE"
+                            <%= "INACTIVE".equals(student.getStatus())
+                                ? "selected"
+                                : "" %>>
+                            Inactive
+                        </option>
 
-                        <label>
-                            State
-                        </label>
+                        <option value="SUSPENDED"
+                            <%= "SUSPENDED".equals(student.getStatus())
+                                ? "selected"
+                                : "" %>>
+                            Suspended
+                        </option>
 
-                        <input
-                            type="text"
-                            name="state"
-                            maxlength="100"
-                            value="<%= student.getState() != null
-                                ? student.getState()
-                                : "" %>"
-                        >
+                        <option value="GRADUATED"
+                            <%= "GRADUATED".equals(student.getStatus())
+                                ? "selected"
+                                : "" %>>
+                            Graduated
+                        </option>
 
-                    </div>
+                    </select>
 
-
-                    <div class="form-group">
-
-                        <label>
-                            Postal Code
-                        </label>
-
-                        <input
-                            type="text"
-                            name="postalCode"
-                            maxlength="20"
-                            value="<%= student.getPostalCode() != null
-                                ? student.getPostalCode()
-                                : "" %>"
-                        >
-
-                    </div>
+                </div>
 
 
-                    <div class="form-group">
+                <!-- COUNTRY -->
 
-                        <label>
-                            Country
-                        </label>
+                <div class="form-group">
 
-                        <input
-                            type="text"
-                            name="country"
-                            maxlength="100"
-                            value="<%= student.getCountry() != null
-                                ? student.getCountry()
-                                : "" %>"
-                        >
+                    <label for="country">
+                        Country
+                    </label>
 
-                    </div>
+                    <input
+                        type="text"
+                        id="country"
+                        name="country"
+                        maxlength="100"
+                        value="<%= student.getCountry() != null
+                            ? student.getCountry()
+                            : "" %>">
+
+                </div>
+
+
+                <!-- ADDRESS LINE 1 -->
+
+                <div class="form-group full">
+
+                    <label for="addressLine1">
+                        Address Line 1
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addressLine1"
+                        name="addressLine1"
+                        maxlength="255"
+                        value="<%= student.getAddressLine1() != null
+                            ? student.getAddressLine1()
+                            : "" %>">
+
+                </div>
+
+
+                <!-- ADDRESS LINE 2 -->
+
+                <div class="form-group full">
+
+                    <label for="addressLine2">
+                        Address Line 2
+                    </label>
+
+                    <input
+                        type="text"
+                        id="addressLine2"
+                        name="addressLine2"
+                        maxlength="255"
+                        value="<%= student.getAddressLine2() != null
+                            ? student.getAddressLine2()
+                            : "" %>">
+
+                </div>
+
+
+                <!-- CITY -->
+
+                <div class="form-group">
+
+                    <label for="city">
+                        City
+                    </label>
+
+                    <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        maxlength="100"
+                        value="<%= student.getCity() != null
+                            ? student.getCity()
+                            : "" %>">
+
+                </div>
+
+
+                <!-- STATE -->
+
+                <div class="form-group">
+
+                    <label for="state">
+                        State
+                    </label>
+
+                    <input
+                        type="text"
+                        id="state"
+                        name="state"
+                        maxlength="100"
+                        value="<%= student.getState() != null
+                            ? student.getState()
+                            : "" %>">
+
+                </div>
+
+
+                <!-- POSTAL CODE -->
+
+                <div class="form-group">
+
+                    <label for="postalCode">
+                        Postal Code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="postalCode"
+                        name="postalCode"
+                        maxlength="20"
+                        value="<%= student.getPostalCode() != null
+                            ? student.getPostalCode()
+                            : "" %>">
 
                 </div>
 
@@ -571,25 +584,23 @@
 
             <!-- ACTIONS -->
 
-            <div class="card">
+            <div class="actions">
 
-                <div class="actions">
+                <a
+                    href="<%= request.getContextPath() %>/admin/students"
+                    class="btn btn-cancel">
 
-                    <a
-                        href="<%= request.getContextPath() %>/admin/students"
-                        class="btn btn-secondary"
-                    >
-                        Cancel
-                    </a>
+                    Cancel
 
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                    >
-                        Update Student
-                    </button>
+                </a>
 
-                </div>
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    Update Student
+
+                </button>
 
             </div>
 
@@ -597,5 +608,8 @@
 
     </div>
 
+</div>
+
 </body>
+
 </html>
