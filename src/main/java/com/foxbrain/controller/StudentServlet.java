@@ -313,61 +313,80 @@ public class StudentServlet extends HttpServlet {
 
         try {
 
-            String idParam =
-                request.getParameter("id");
+            String idParam = request.getParameter("id");
 
-            if (idParam == null ||
-                    idParam.trim().isEmpty()) {
-
+            if (idParam == null || idParam.trim().isEmpty()) {
                 throw new IllegalArgumentException(
                     "Student ID is required."
                 );
             }
 
-            long id =
-                Long.parseLong(idParam);
+            long id = Long.parseLong(idParam);
+
+            // -------------------------------------------------
+            // Load the existing student from the database.
+            // This gives us the real user_id.
+            // -------------------------------------------------
+
+            Student existingStudent =
+                studentService.getById(id);
+
+            if (existingStudent == null) {
+                throw new IllegalArgumentException(
+                    "Student not found."
+                );
+            }
+
+            // -------------------------------------------------
+            // Build updated student data from the form.
+            // -------------------------------------------------
 
             Student student =
                 buildStudentFromRequest(request);
 
-            student.setId(id);
+            student.setId(existingStudent.getId());
+
+            // IMPORTANT:
+            // Never take userId from the browser.
+            student.setUserId(
+                existingStudent.getUserId()
+            );
 
             // -------------------------------------------------
-            // IMPORTANT
-            // For update we keep the existing user_id.
+            // Update student
             // -------------------------------------------------
-
-            String userIdParam =
-                request.getParameter("userId");
-
-            if (userIdParam == null ||
-                    userIdParam.trim().isEmpty()) {
-
-                throw new IllegalArgumentException(
-                    "Student user ID is required for update."
-                );
-            }
-
-            long userId =
-                Long.parseLong(userIdParam);
-
-            student.setUserId(userId);
 
             boolean updated =
                 studentService.update(student);
 
             if (!updated) {
-
                 throw new RuntimeException(
                     "Student could not be updated."
                 );
             }
+
+            // -------------------------------------------------
+            // SUCCESS
+            // -------------------------------------------------
 
             response.sendRedirect(
                 request.getContextPath()
                 + "/admin/students?updated="
                 + id
             );
+
+        } catch (NumberFormatException e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                "errorMessage",
+                "Invalid student ID."
+            );
+
+            request.getRequestDispatcher(
+                "/admin/students/edit.jsp"
+            ).forward(request, response);
 
         } catch (Exception e) {
 
@@ -383,7 +402,6 @@ public class StudentServlet extends HttpServlet {
             ).forward(request, response);
         }
     }
-
     // =========================================================
     // DELETE STUDENT
     // =========================================================

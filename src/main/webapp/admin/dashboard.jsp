@@ -1,21 +1,46 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
-<%@ page import="com.foxbrain.model.User" %>
+<%@ page import="com.foxbrain.model.Dashboard" %>
+<%@ page import="com.foxbrain.model.Student" %>
+<%@ page import="java.util.List" %>
 
 <%
-    User loggedInUser =
-            (User) session.getAttribute("loggedInUser");
+    request.setAttribute(
+        "pageTitle",
+        "Dashboard"
+    );
 
-    if (loggedInUser == null) {
-        response.sendRedirect(
-                request.getContextPath() + "/login.jsp"
+    Dashboard dashboard =
+        (Dashboard) request.getAttribute("dashboard");
+
+    String errorMessage =
+        (String) request.getAttribute("errorMessage");
+
+    if (dashboard == null) {
+
+        dashboard =
+            new Dashboard();
+
+        dashboard.setRecentStudents(
+            new java.util.ArrayList<Student>()
         );
-        return;
     }
+
+    List<Student> recentStudents =
+        dashboard.getRecentStudents();
+
+    String dashboardFirstName =
+            (String) session.getAttribute("firstName");
+
+        if (dashboardFirstName == null ||
+            dashboardFirstName.trim().isEmpty()) {
+
+            dashboardFirstName = "Admin";
+        }
 %>
 
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -25,541 +50,679 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Admin Dashboard | FoxBrain Institute</title>
+    <title>
+        FoxBrain Admin Dashboard
+    </title>
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        body {
-            background: #f5f7fb;
-            color: #1e293b;
-        }
-
-        .layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* SIDEBAR */
-
-        .sidebar {
-            width: 250px;
-            background: #172554;
-            color: white;
-            padding: 25px 15px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            overflow-y: auto;
-        }
-
-        .brand {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .brand h1 {
-            font-size: 24px;
-        }
-
-        .brand p {
-            font-size: 12px;
-            margin-top: 5px;
-            opacity: 0.7;
-        }
-
-        .menu-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            opacity: 0.55;
-            margin: 20px 10px 8px;
-        }
-
-        .menu a {
-            display: block;
-            color: #e2e8f0;
-            text-decoration: none;
-            padding: 11px 12px;
-            border-radius: 7px;
-            margin-bottom: 4px;
-            font-size: 14px;
-        }
-
-        .menu a:hover,
-        .menu a.active {
-            background: #2563eb;
-            color: white;
-        }
-
-        /* MAIN */
-
-        .main {
-            margin-left: 250px;
-            width: calc(100% - 250px);
-        }
-
-        .topbar {
-            height: 70px;
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-        }
-
-        .topbar h2 {
-            font-size: 20px;
-        }
-
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-name {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .logout {
-            text-decoration: none;
-            color: #dc2626;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .welcome {
-            margin-bottom: 25px;
-        }
-
-        .welcome h1 {
-            font-size: 25px;
-            margin-bottom: 6px;
-        }
-
-        .welcome p {
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        /* CARDS */
-
-        .cards {
-            display: grid;
-            grid-template-columns:
-                repeat(auto-fit, minmax(210px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .card-title {
-            color: #64748b;
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-
-        .card-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #172554;
-        }
-
-        /* QUICK ACTIONS */
-
-        .section {
-            margin-top: 30px;
-        }
-
-        .section h2 {
-            font-size: 19px;
-            margin-bottom: 15px;
-        }
-
-        .actions {
-            display: grid;
-            grid-template-columns:
-                repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
-
-        .action {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 18px;
-            text-decoration: none;
-            color: #1e293b;
-        }
-
-        .action:hover {
-            border-color: #2563eb;
-        }
-
-        .action strong {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .action span {
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        /* MOBILE */
-
-        @media (max-width: 800px) {
-
-            .sidebar {
-                width: 210px;
-            }
-
-            .main {
-                margin-left: 210px;
-                width: calc(100% - 210px);
-            }
-
-            .topbar {
-                padding: 0 18px;
-            }
-
-            .content {
-                padding: 20px;
-            }
-        }
-
-    </style>
+    <link rel="stylesheet"
+          href="<%= request.getContextPath() %>/assets/css/admin.css">
 
 </head>
 
 <body>
 
-<div class="layout">
-
-    <!-- SIDEBAR -->
-
-    <aside class="sidebar">
-
-        <div class="brand">
-            <h1>FoxBrain</h1>
-            <p>Institute Management</p>
-        </div>
-
-        <div class="menu">
-
-            <div class="menu-title">
-                Main
-            </div>
-
-            <a href="${pageContext.request.contextPath}/admin/dashboard.jsp"
-               class="active">
-                Dashboard
-            </a>
-
-            <div class="menu-title">
-                Academic
-            </div>
-
-          <a href="<%= request.getContextPath() %>/admin/students">
-    Students
-</a>
-
-<a href="<%= request.getContextPath() %>/admin/teachers">
-    Teachers
-</a>
-
-<a href="<%= request.getContextPath() %>/admin/courses">
-    Courses
-</a>
-
-            <a href="${pageContext.request.contextPath}/admin/batches/">
-                Batches
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/enrollments/">
-                Enrollments
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/attendance/">
-                Attendance
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/assignments/">
-                Assignments
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/exams/">
-                Exams
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/results/">
-                Results
-            </a>
-
-            <div class="menu-title">
-                Finance
-            </div>
-
-            <a href="${pageContext.request.contextPath}/admin/fees/">
-                Fees
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/payments/">
-                Payments
-            </a>
-
-            <div class="menu-title">
-                Communication
-            </div>
-
-            <a href="${pageContext.request.contextPath}/admin/announcements/">
-                Announcements
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/notifications/">
-                Notifications
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/enquiries/">
-                Enquiries
-            </a>
-
-            <div class="menu-title">
-                System
-            </div>
-
-            <a href="${pageContext.request.contextPath}/admin/certificates/">
-                Certificates
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/reports/">
-                Reports
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/settings/">
-                Settings
-            </a>
-
-            <a href="${pageContext.request.contextPath}/admin/website/">
-                Website Content
-            </a>
-
-        </div>
-
-    </aside>
+<div class="admin-layout">
 
 
-    <!-- MAIN -->
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
 
-    <main class="main">
-
-        <header class="topbar">
-
-            <h2>Admin Dashboard</h2>
-
-            <div class="user-area">
-
-                <span class="user-name">
-                    Welcome,
-                    <%= loggedInUser.getFirstName() %>
-                </span>
-
-                <a class="logout"
-                   href="${pageContext.request.contextPath}/logout">
-                    Logout
-                </a>
-
-            </div>
-
-        </header>
+    <%@ include file="/includes/admin-sidebar.jsp" %>
 
 
-        <section class="content">
+    <!-- =====================================================
+         MAIN AREA
+         ===================================================== -->
 
-            <div class="welcome">
-
-                <h1>
-                    Welcome to FoxBrain Institute
-                </h1>
-
-                <p>
-                    Manage students, teachers, courses,
-                    academics, finance and institute operations.
-                </p>
-
-            </div>
+    <div class="admin-main-area">
 
 
-            <!-- SUMMARY CARDS -->
+        <!-- HEADER -->
 
-            <div class="cards">
+        <%@ include file="/includes/admin-header.jsp" %>
+
+
+        <!-- MAIN CONTENT -->
+
+        <main class="admin-content">
+
+            <div class="container">
+
+
+                <!-- =================================================
+                     WELCOME
+                     ================================================= -->
+
+                <section class="dashboard-welcome">
+
+                    <h2>
+                        Welcome back,
+                       <%= dashboardFirstName %>👋
+                    </h2>
+
+                    <p>
+                        Here's what's happening at
+                        FoxBrain Institute today.
+                    </p>
+
+                </section>
+
+
+                <!-- ERROR -->
+
+                <% if (errorMessage != null) { %>
+
+                    <div class="alert error">
+                        <%= errorMessage %>
+                    </div>
+
+                <% } %>
+
+
+                <!-- =================================================
+                     KPI CARDS
+                     ================================================= -->
+
+                <section class="kpi-grid">
+
+
+                    <!-- STUDENTS -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            👨‍🎓
+                        </div>
+
+                        <h3>
+                            Total Students
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getTotalStudents() %>
+                        </span>
+
+                    </div>
+
+
+                    <!-- TEACHERS -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            👨‍🏫
+                        </div>
+
+                        <h3>
+                            Total Teachers
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getTotalTeachers() %>
+                        </span>
+
+                    </div>
+
+
+                    <!-- COURSES -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            📚
+                        </div>
+
+                        <h3>
+                            Total Courses
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getTotalCourses() %>
+                        </span>
+
+                    </div>
+
+
+                    <!-- BATCHES -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            🏫
+                        </div>
+
+                        <h3>
+                            Total Batches
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getTotalBatches() %>
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     SECONDARY STATISTICS
+                     ================================================= -->
+
+                <section class="kpi-grid">
+
+
+                    <!-- ADMISSIONS -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            📝
+                        </div>
+
+                        <h3>
+                            Pending Admissions
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getPendingAdmissions() %>
+                        </span>
+
+                    </div>
+
+
+                    <!-- ATTENDANCE -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            📋
+                        </div>
+
+                        <h3>
+                            Today's Attendance
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getTodayAttendance() %>
+                        </span>
+
+                    </div>
+
+
+                    <!-- FEES -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            💰
+                        </div>
+
+                        <h3>
+                            Pending Fees
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getPendingFees() %>
+                        </span>
+
+                    </div>
+
+
+                    <!-- EXAMS -->
+
+                    <div class="kpi-card">
+
+                        <div class="kpi-icon">
+                            📝
+                        </div>
+
+                        <h3>
+                            Upcoming Exams
+                        </h3>
+
+                        <span class="kpi-number">
+                            <%= dashboard.getUpcomingExams() %>
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     DASHBOARD GRID
+                     ================================================= -->
+
+                <section class="dashboard-grid">
+
+
+                    <!-- =============================================
+                         RECENT STUDENTS
+                         ============================================= -->
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Recent Students
+                                </h3>
+
+                                <p>
+                                    Latest student registrations
+                                </p>
+
+                            </div>
+
+                            <a href="<%= request.getContextPath() %>/admin/students"
+                               class="btn btn-edit">
+                                View All
+                            </a>
+
+                        </div>
+
+
+                        <% if (recentStudents == null ||
+                               recentStudents.isEmpty()) { %>
+
+
+                            <div class="empty">
+
+                                <div class="empty-icon">
+                                    👨‍🎓
+                                </div>
+
+                                <h3>
+                                    No Students Yet
+                                </h3>
+
+                                <p>
+                                    New students will appear here.
+                                </p>
+
+                                <a href="<%= request.getContextPath() %>/admin/students?action=add"
+                                   class="btn btn-primary">
+                                    + Add Student
+                                </a>
+
+                            </div>
+
+
+                        <% } else { %>
+
+
+                            <div class="table-responsive">
+
+                                <table>
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                Admission
+                                            </th>
+
+                                            <th>
+                                                Student ID
+                                            </th>
+
+                                            <th>
+                                                Status
+                                            </th>
+
+                                            <th>
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+
+                                    <tbody>
+
+                                    <% for (
+                                        Student student :
+                                        recentStudents
+                                    ) { %>
+
+
+                                        <tr>
+
+                                            <td>
+
+                                                <strong>
+                                                    <%= student.getAdmissionNumber() != null
+                                                        ? student.getAdmissionNumber()
+                                                        : "-" %>
+                                                </strong>
+
+                                            </td>
+
+
+                                            <td>
+                                                #<%= student.getId() %>
+                                            </td>
+
+
+                                            <td>
+
+                                                <span class="status status-<%= 
+                                                    student.getStatus() != null
+                                                        ? student.getStatus().toLowerCase()
+                                                        : "unknown"
+                                                %>">
+
+                                                    <%= student.getStatus() != null
+                                                        ? student.getStatus()
+                                                        : "UNKNOWN" %>
+
+                                                </span>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <a href="<%= request.getContextPath() %>/admin/students?action=edit&id=<%= student.getId() %>"
+                                                   class="btn btn-edit">
+
+                                                    View
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+
+                                    <% } %>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+
+                        <% } %>
+
+                    </div>
+
+
+                    <!-- =============================================
+                         QUICK ACTIONS
+                         ============================================= -->
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Quick Actions
+                                </h3>
+
+                                <p>
+                                    Frequently used actions
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="quick-actions">
+
+
+                            <a href="<%= request.getContextPath() %>/admin/students?action=add"
+                               class="quick-action">
+
+                                <span>
+                                    👨‍🎓
+                                </span>
+
+                                <div>
+                                    <strong>
+                                        Add Student
+                                    </strong>
+
+                                    <small>
+                                        Create student account
+                                    </small>
+                                </div>
+
+                            </a>
+
+
+                            <a href="<%= request.getContextPath() %>/admin/teachers?action=add"
+                               class="quick-action">
+
+                                <span>
+                                    👨‍🏫
+                                </span>
+
+                                <div>
+                                    <strong>
+                                        Add Teacher
+                                    </strong>
+
+                                    <small>
+                                        Register new teacher
+                                    </small>
+                                </div>
+
+                            </a>
+
+
+                            <a href="<%= request.getContextPath() %>/admin/courses?action=add"
+                               class="quick-action">
+
+                                <span>
+                                    📚
+                                </span>
+
+                                <div>
+                                    <strong>
+                                        Add Course
+                                    </strong>
+
+                                    <small>
+                                        Create new course
+                                    </small>
+
+                                </div>
+
+                            </a>
+
+
+                            <a href="<%= request.getContextPath() %>/admin/admissions"
+                               class="quick-action">
+
+                                <span>
+                                    📝
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Admissions
+                                    </strong>
+
+                                    <small>
+                                        Manage applications
+                                    </small>
+
+                                </div>
+
+                            </a>
+
+
+                            <a href="<%= request.getContextPath() %>/admin/announcements"
+                               class="quick-action">
+
+                                <span>
+                                    📢
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Announcement
+                                    </strong>
+
+                                    <small>
+                                        Publish announcement
+                                    </small>
+
+                                </div>
+
+                            </a>
+
+
+                        </div>
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     SYSTEM OVERVIEW
+                     ================================================= -->
 
                 <div class="card">
-                    <div class="card-title">
-                        Students
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <h3>
+                                FoxBrain Institute Overview
+                            </h3>
+
+                            <p>
+                                Quick overview of your institute
+                                management system.
+                            </p>
+
+                        </div>
+
                     </div>
 
-                    <div class="card-value">
-                        —
+
+                    <div class="overview-grid">
+
+
+                        <div class="overview-item">
+
+                            <span class="overview-icon">
+                                🎓
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Student Management
+                                </strong>
+
+                                <small>
+                                    Accounts, admissions and
+                                    student records
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="overview-item">
+
+                            <span class="overview-icon">
+                                📖
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Academic Management
+                                </strong>
+
+                                <small>
+                                    Courses, batches,
+                                    assignments and exams
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="overview-item">
+
+                            <span class="overview-icon">
+                                💳
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Finance Management
+                                </strong>
+
+                                <small>
+                                    Fees, payments and
+                                    financial records
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="overview-item">
+
+                            <span class="overview-icon">
+                                📊
+                            </span>
+
+                            <div>
+
+                                <strong>
+                                    Reports & Analytics
+                                </strong>
+
+                                <small>
+                                    Institute performance
+                                    and reports
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
                     </div>
+
                 </div>
 
-
-                <div class="card">
-                    <div class="card-title">
-                        Teachers
-                    </div>
-
-                    <div class="card-value">
-                        —
-                    </div>
-                </div>
-
-
-                <div class="card">
-                    <div class="card-title">
-                        Courses
-                    </div>
-
-                    <div class="card-value">
-                        —
-                    </div>
-                </div>
-
-
-                <div class="card">
-                    <div class="card-title">
-                        Active Batches
-                    </div>
-
-                    <div class="card-value">
-                        —
-                    </div>
-                </div>
 
             </div>
 
+        </main>
 
-            <!-- QUICK ACTIONS -->
-
-            <div class="section">
-
-                <h2>
-                    Quick Actions
-                </h2>
-
-                <div class="actions">
-
-                    <a class="action"
-                       href="${pageContext.request.contextPath}/admin/students/">
-
-                        <strong>
-                            Manage Students
-                        </strong>
-
-                        <span>
-                            Add and manage student records
-                        </span>
-
-                    </a>
-
-
-                    <a class="action"
-                       href="${pageContext.request.contextPath}/admin/teachers/">
-
-                        <strong>
-                            Manage Teachers
-                        </strong>
-
-                        <span>
-                            Manage faculty and assignments
-                        </span>
-
-                    </a>
-
-
-                    <a class="action"
-                       href="${pageContext.request.contextPath}/admin/courses/">
-
-                        <strong>
-                            Manage Courses
-                        </strong>
-
-                        <span>
-                            Configure institute courses
-                        </span>
-
-                    </a>
-
-
-                    <a class="action"
-                       href="${pageContext.request.contextPath}/admin/batches/">
-
-                        <strong>
-                            Manage Batches
-                        </strong>
-
-                        <span>
-                            Create and manage batches
-                        </span>
-
-                    </a>
-
-
-                    <a class="action"
-                       href="${pageContext.request.contextPath}/admin/enquiries/">
-
-                        <strong>
-                            View Enquiries
-                        </strong>
-
-                        <span>
-                            Manage website enquiries
-                        </span>
-
-                    </a>
-
-
-                    <a class="action"
-                       href="${pageContext.request.contextPath}/admin/announcements/">
-
-                        <strong>
-                            Announcements
-                        </strong>
-
-                        <span>
-                            Publish institute announcements
-                        </span>
-
-                    </a>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
+    </div>
 
 </div>
+
+
+<script src="<%= request.getContextPath() %>/assets/js/admin.js"></script>
 
 </body>
 
