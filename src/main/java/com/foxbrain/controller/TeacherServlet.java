@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
 
+import java.sql.SQLException;
+
 @WebServlet("/admin/teachers")
 public class TeacherServlet extends HttpServlet {
 
@@ -226,72 +228,58 @@ public class TeacherServlet extends HttpServlet {
     // EDIT FORM
     // =========================================================
 
-    private void showEditForm(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+   private void showEditForm(
+        HttpServletRequest request,
+        HttpServletResponse response)
+        throws ServletException, IOException {
 
-        String idParam =
-            request.getParameter("id");
+    String idParam = request.getParameter("id");
 
+    if (idParam == null || idParam.trim().isEmpty()) {
+        response.sendError(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "Teacher ID is required."
+        );
+        return;
+    }
 
-        if (idParam == null ||
-            idParam.trim().isEmpty()) {
+    try {
 
+        long id = Long.parseLong(idParam);
+
+        Teacher teacher = teacherService.getById(id);
+
+        if (teacher == null) {
             response.sendError(
-                HttpServletResponse.SC_BAD_REQUEST,
-                "Teacher ID is required."
+                HttpServletResponse.SC_NOT_FOUND,
+                "Teacher not found."
             );
-
             return;
         }
 
+        request.setAttribute("teacher", teacher);
 
-        try {
+        request.getRequestDispatcher(
+            "/admin/teachers/edit.jsp"
+        ).forward(request, response);
 
-            long id =
-                Long.parseLong(idParam);
+    } catch (NumberFormatException e) {
 
+        response.sendError(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "Invalid teacher ID."
+        );
 
-            Teacher teacher =
-                teacherService.getById(id);
+    } catch (SQLException e) {
 
+        e.printStackTrace();
 
-            if (teacher == null) {
-
-                response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND,
-                    "Teacher not found."
-                );
-
-                return;
-            }
-
-
-            request.setAttribute(
-                "teacher",
-                teacher
-            );
-
-
-            request.getRequestDispatcher(
-                "/admin/teachers/edit.jsp"
-            ).forward(
-                request,
-                response
-            );
-
-
-        } catch (NumberFormatException e) {
-
-            response.sendError(
-                HttpServletResponse.SC_BAD_REQUEST,
-                "Invalid teacher ID."
-            );
-        }
+        response.sendError(
+            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            "Database error while loading teacher."
+        );
     }
-
-
+}
     // =========================================================
     // CREATE
     // =========================================================
