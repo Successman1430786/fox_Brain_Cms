@@ -39,7 +39,7 @@
         currentURI.contains("/admin/exams");
 
     boolean resultsActive =
-        currentURI.contains("/admin/results");
+    	    currentURI.contains("/admin/exam-results");
 
     boolean feesActive =
         currentURI.contains("/admin/fees");
@@ -261,19 +261,20 @@
 
 
             <!-- Results -->
+<!-- Results -->
 
-            <a href="<%= contextPath %>/admin/results"
-               class="sidebar-link <%= resultsActive ? "active" : "" %>">
+<a href="<%= contextPath %>/admin/exam-results"
+   class="sidebar-link <%= resultsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📊
-                </span>
+    <span class="sidebar-icon">
+        📊
+    </span>
 
-                <span class="sidebar-link-text">
-                    Results
-                </span>
+    <span class="sidebar-link-text">
+        Results
+    </span>
 
-            </a>
+</a>
 
         </div>
 

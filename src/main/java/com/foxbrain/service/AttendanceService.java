@@ -1,47 +1,221 @@
 package com.foxbrain.service;
 
-import java.util.List;
-
 import com.foxbrain.dao.AttendanceDAO;
 import com.foxbrain.model.Attendance;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class AttendanceService {
 
-    private final AttendanceDAO dao;
+    private final AttendanceDAO attendanceDAO;
+    private final EnrollmentService enrollmentService;
+    private final TeacherService teacherService;
+
+    private static final Set<String> VALID_STATUSES =
+            new HashSet<>(Arrays.asList(
+                    "PRESENT",
+                    "ABSENT",
+                    "LATE",
+                    "EXCUSED"
+            ));
 
     public AttendanceService() {
-        this.dao = new AttendanceDAO();
+
+        this.attendanceDAO = new AttendanceDAO();
+        this.enrollmentService = new EnrollmentService();
+        this.teacherService = new TeacherService();
     }
 
-    public Attendance findById(long id) {
+    public List<Attendance> getAll()
+            throws SQLException {
+
+        return attendanceDAO.findAll();
+    }
+
+    public List<Attendance> getByDate(LocalDate date)
+            throws SQLException {
+
+        if (date == null) {
+            throw new IllegalArgumentException(
+                    "Attendance date is required."
+            );
+        }
+
+        return attendanceDAO.findByDate(date);
+    }
+
+    public List<Attendance> getByStatus(String status)
+            throws SQLException {
+
+        if (status == null || status.trim().isEmpty()) {
+            return attendanceDAO.findAll();
+        }
+
+        status = status.trim().toUpperCase();
+
+        if (!VALID_STATUSES.contains(status)) {
+            throw new IllegalArgumentException(
+                    "Invalid attendance status."
+            );
+        }
+
+        return attendanceDAO.findByStatus(status);
+    }
+
+    public Attendance getById(long id)
+            throws SQLException {
+
         if (id <= 0) {
-            throw new IllegalArgumentException("Invalid ID");
+            return null;
         }
-        return dao.findById(id);
+
+        return attendanceDAO.findById(id);
     }
 
-    public List<Attendance> findAll() {
-        return dao.findAll();
-    }
+    public long create(Attendance attendance)
+            throws SQLException {
 
-    public long save(Attendance obj) {
-        if (obj == null) {
-            throw new IllegalArgumentException("Object cannot be null");
+        validate(attendance);
+
+        if (attendanceDAO.existsByEnrollmentAndDate(
+                attendance.getEnrollmentId(),
+                attendance.getAttendanceDate())) {
+
+            throw new IllegalArgumentException(
+                    "Attendance already exists for this enrollment and date."
+            );
         }
-        return dao.insert(obj);
+
+        return attendanceDAO.insert(attendance);
     }
 
-    public boolean update(Attendance obj) {
-        if (obj == null || obj.getId() <= 0) {
-            throw new IllegalArgumentException("Invalid object or ID");
+    public void update(Attendance attendance)
+            throws SQLException {
+
+        if (attendance == null || attendance.getId() <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Invalid attendance ID."
+            );
         }
-        return dao.update(obj);
+
+        validate(attendance);
+
+        if (attendanceDAO.existsByEnrollmentAndDateExceptId(
+                attendance.getEnrollmentId(),
+                attendance.getAttendanceDate(),
+                attendance.getId())) {
+
+            throw new IllegalArgumentException(
+                    "Attendance already exists for this enrollment and date."
+            );
+        }
+
+        attendanceDAO.update(attendance);
     }
 
-    public boolean delete(long id) {
+    public void delete(long id)
+            throws SQLException {
+
         if (id <= 0) {
-            throw new IllegalArgumentException("Invalid ID");
+
+            throw new IllegalArgumentException(
+                    "Invalid attendance ID."
+            );
         }
-        return dao.delete(id);
+
+        attendanceDAO.delete(id);
+    }
+
+    private void validate(Attendance attendance)
+            throws SQLException {
+
+        if (attendance == null) {
+
+            throw new IllegalArgumentException(
+                    "Attendance data is required."
+            );
+        }
+
+        if (attendance.getEnrollmentId() <= 0) {
+
+            throw new IllegalArgumentException(
+                    "Please select an enrollment."
+            );
+        }
+
+        if (enrollmentService.getById(
+                attendance.getEnrollmentId()) == null) {
+
+            throw new IllegalArgumentException(
+                    "Selected enrollment does not exist."
+            );
+        }
+
+        if (attendance.getAttendanceDate() == null) {
+
+            attendance.setAttendanceDate(
+                    LocalDate.now()
+            );
+        }
+
+        String status = attendance.getStatus();
+
+        if (status == null || status.trim().isEmpty()) {
+
+            status = "PRESENT";
+
+        } else {
+
+            status = status.trim().toUpperCase();
+        }
+
+        if (!VALID_STATUSES.contains(status)) {
+
+            throw new IllegalArgumentException(
+                    "Invalid attendance status."
+            );
+        }
+
+        attendance.setStatus(status);
+
+        if (attendance.getCheckInTime() != null
+                && attendance.getCheckOutTime() != null
+                && attendance.getCheckOutTime()
+                    .isBefore(attendance.getCheckInTime())) {
+
+            throw new IllegalArgumentException(
+                    "Check-out time cannot be before check-in time."
+            );
+        }
+
+        if (attendance.getRemarks() != null
+                && attendance.getRemarks().trim().length() > 500) {
+
+            throw new IllegalArgumentException(
+                    "Remarks must not exceed 500 characters."
+            );
+        }
+
+        if (attendance.getMarkedByTeacherId() != null
+                && attendance.getMarkedByTeacherId() > 0) {
+
+            if (teacherService.getById(
+                    attendance.getMarkedByTeacherId()) == null) {
+
+                throw new IllegalArgumentException(
+                        "Selected teacher does not exist."
+                );
+            }
+
+        } else {
+
+            attendance.setMarkedByTeacherId(null);
+        }
     }
 }
