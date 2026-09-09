@@ -189,18 +189,12 @@
             <!-- Courses -->
 
             <a href="<%= contextPath %>/admin/courses"
-               class="sidebar-link <%= coursesActive ? "active" : "" %>">
+   class="sidebar-link <%= coursesActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📖
-                </span>
+    <span class="sidebar-icon">📖</span>
+    <span class="sidebar-link-text">Courses</span>
 
-                <span class="sidebar-link-text">
-                    Courses
-                </span>
-
-            </a>
-
+</a>
 
             <!-- Batches -->
 
