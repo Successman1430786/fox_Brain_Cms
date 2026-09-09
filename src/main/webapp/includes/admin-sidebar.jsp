@@ -1,19 +1,21 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+```jsp
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
 <%
+    String contextPath = request.getContextPath();
     String currentURI = request.getRequestURI();
 
-    String contextPath = request.getContextPath();
-
     boolean dashboardActive =
-        currentURI.endsWith("/admin/dashboard.jsp");
+        currentURI.contains("/admin/dashboard.jsp");
 
     boolean studentsActive =
         currentURI.contains("/admin/students");
 
     boolean teachersActive =
         currentURI.contains("/admin/teachers");
+
+    boolean categoriesActive =
+        currentURI.contains("/admin/course-categories");
 
     boolean coursesActive =
         currentURI.contains("/admin/courses");
@@ -51,6 +53,12 @@
     boolean announcementsActive =
         currentURI.contains("/admin/announcements");
 
+    boolean notificationsActive =
+        currentURI.contains("/admin/notifications");
+
+    boolean enquiriesActive =
+        currentURI.contains("/admin/enquiries");
+
     boolean reportsActive =
         currentURI.contains("/admin/reports");
 
@@ -60,329 +68,450 @@
 
 <aside class="admin-sidebar" id="adminSidebar">
 
-    <!-- BRAND -->
+    <!-- =====================================================
+         SIDEBAR BRAND
+         ===================================================== -->
 
     <div class="sidebar-brand">
 
-        <div class="brand-logo">
-            🦊
-        </div>
+        <a href="<%= contextPath %>/admin/dashboard.jsp"
+           class="sidebar-brand-link">
 
-        <div class="brand-text">
-            <div class="brand-name">
-                FoxBrain
+            <div class="sidebar-logo">
+                🦊
             </div>
 
-            <div class="brand-subtitle">
-                Institute Admin
+            <div class="sidebar-brand-text">
+
+                <strong>FoxBrain</strong>
+
+                <span>Institute Admin</span>
+
             </div>
-        </div>
+
+        </a>
 
     </div>
 
 
-    <!-- NAVIGATION -->
+    <!-- =====================================================
+         SIDEBAR NAVIGATION
+         ===================================================== -->
 
-    <nav class="sidebar-navigation">
+    <nav class="sidebar-nav">
 
-        <div class="nav-section-title">
-            MAIN
+
+        <!-- =================================================
+             MAIN
+             ================================================= -->
+
+        <div class="sidebar-section">
+
+            <div class="sidebar-section-title">
+                MAIN
+            </div>
+
+            <a href="<%= contextPath %>/admin/dashboard.jsp"
+               class="sidebar-link <%= dashboardActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    🏠
+                </span>
+
+                <span class="sidebar-link-text">
+                    Dashboard
+                </span>
+
+            </a>
+
         </div>
 
 
-        <!-- DASHBOARD -->
+        <!-- =================================================
+             ACADEMIC
+             ================================================= -->
 
-        <a
-            href="<%= contextPath %>/admin/dashboard.jsp"
-            class="sidebar-link <%= dashboardActive ? "active" : "" %>">
+        <div class="sidebar-section">
 
-            <span class="sidebar-icon">▣</span>
-
-            <span class="sidebar-label">
-                Dashboard
-            </span>
-
-        </a>
+            <div class="sidebar-section-title">
+                ACADEMIC
+            </div>
 
 
-        <div class="nav-section-title">
-            ACADEMIC
+            <!-- Students -->
+
+            <a href="<%= contextPath %>/admin/students"
+               class="sidebar-link <%= studentsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    👨‍🎓
+                </span>
+
+                <span class="sidebar-link-text">
+                    Students
+                </span>
+
+            </a>
+
+
+            <!-- Teachers -->
+
+            <a href="<%= contextPath %>/admin/teachers"
+               class="sidebar-link <%= teachersActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    👨‍🏫
+                </span>
+
+                <span class="sidebar-link-text">
+                    Teachers
+                </span>
+
+            </a>
+
+
+            <!-- Course Categories -->
+
+            <a href="<%= contextPath %>/admin/course-categories"
+               class="sidebar-link <%= categoriesActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    📚
+                </span>
+
+                <span class="sidebar-link-text">
+                    Course Categories
+                </span>
+
+            </a>
+
+
+            <!-- Courses -->
+
+            <a href="<%= contextPath %>/admin/courses"
+               class="sidebar-link <%= coursesActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    📖
+                </span>
+
+                <span class="sidebar-link-text">
+                    Courses
+                </span>
+
+            </a>
+
+
+            <!-- Batches -->
+
+            <a href="<%= contextPath %>/admin/batches"
+               class="sidebar-link <%= batchesActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    🗂️
+                </span>
+
+                <span class="sidebar-link-text">
+                    Batches
+                </span>
+
+            </a>
+
+
+            <!-- Attendance -->
+
+            <a href="<%= contextPath %>/admin/attendance"
+               class="sidebar-link <%= attendanceActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    📝
+                </span>
+
+                <span class="sidebar-link-text">
+                    Attendance
+                </span>
+
+            </a>
+
+
+            <!-- Assignments -->
+
+            <a href="<%= contextPath %>/admin/assignments"
+               class="sidebar-link <%= assignmentsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    📋
+                </span>
+
+                <span class="sidebar-link-text">
+                    Assignments
+                </span>
+
+            </a>
+
+
+            <!-- Exams -->
+
+            <a href="<%= contextPath %>/admin/exams"
+               class="sidebar-link <%= examsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    🧾
+                </span>
+
+                <span class="sidebar-link-text">
+                    Exams
+                </span>
+
+            </a>
+
+
+            <!-- Results -->
+
+            <a href="<%= contextPath %>/admin/results"
+               class="sidebar-link <%= resultsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    📊
+                </span>
+
+                <span class="sidebar-link-text">
+                    Results
+                </span>
+
+            </a>
+
         </div>
 
 
-        <!-- STUDENTS -->
+        <!-- =================================================
+             ADMISSIONS
+             ================================================= -->
 
-        <a
-            href="<%= contextPath %>/admin/students"
-            class="sidebar-link <%= studentsActive ? "active" : "" %>">
+        <div class="sidebar-section">
 
-            <span class="sidebar-icon">👨‍🎓</span>
-
-            <span class="sidebar-label">
-                Students
-            </span>
-
-        </a>
+            <div class="sidebar-section-title">
+                ADMISSIONS
+            </div>
 
 
-        <!-- TEACHERS -->
+            <!-- Admissions -->
 
-        <a
-            href="<%= contextPath %>/admin/teachers"
-            class="sidebar-link <%= teachersActive ? "active" : "" %>">
+            <a href="<%= contextPath %>/admin/admissions"
+               class="sidebar-link <%= admissionsActive ? "active" : "" %>">
 
-            <span class="sidebar-icon">👨‍🏫</span>
+                <span class="sidebar-icon">
+                    📨
+                </span>
 
-            <span class="sidebar-label">
-                Teachers
-            </span>
+                <span class="sidebar-link-text">
+                    Admissions
+                </span>
 
-        </a>
-
-
-        <!-- COURSES -->
-
-        <a
-            href="<%= contextPath %>/admin/courses"
-            class="sidebar-link <%= coursesActive ? "active" : "" %>">
-
-            <span class="sidebar-icon">📚</span>
-
-            <span class="sidebar-label">
-                Courses
-            </span>
-
-        </a>
+            </a>
 
 
-        <!-- BATCHES -->
+            <!-- Enrollments -->
 
-        <a
-            href="<%= contextPath %>/admin/batches"
-            class="sidebar-link <%= batchesActive ? "active" : "" %>">
+            <a href="<%= contextPath %>/admin/enrollments"
+               class="sidebar-link <%= enrollmentsActive ? "active" : "" %>">
 
-            <span class="sidebar-icon">🗂</span>
+                <span class="sidebar-icon">
+                    🎓
+                </span>
 
-            <span class="sidebar-label">
-                Batches
-            </span>
+                <span class="sidebar-link-text">
+                    Enrollments
+                </span>
 
-        </a>
+            </a>
 
-
-        <div class="nav-section-title">
-            ADMISSIONS
         </div>
 
 
-        <!-- ADMISSIONS -->
+        <!-- =================================================
+             LEARNING
+             ================================================= -->
 
-        <a
-            href="<%= contextPath %>/admin/admissions"
-            class="sidebar-link <%= admissionsActive ? "active" : "" %>">
+        <div class="sidebar-section">
 
-            <span class="sidebar-icon">📝</span>
-
-            <span class="sidebar-label">
-                Admissions
-            </span>
-
-        </a>
+            <div class="sidebar-section-title">
+                LEARNING
+            </div>
 
 
-        <!-- ENROLLMENTS -->
+            <!-- Certificates -->
 
-        <a
-            href="<%= contextPath %>/admin/enrollments"
-            class="sidebar-link <%= enrollmentsActive ? "active" : "" %>">
+            <a href="<%= contextPath %>/admin/certificates"
+               class="sidebar-link <%= certificatesActive ? "active" : "" %>">
 
-            <span class="sidebar-icon">📋</span>
+                <span class="sidebar-icon">
+                    🏆
+                </span>
 
-            <span class="sidebar-label">
-                Enrollments
-            </span>
+                <span class="sidebar-link-text">
+                    Certificates
+                </span>
 
-        </a>
+            </a>
 
-
-        <div class="nav-section-title">
-            LEARNING
         </div>
 
 
-        <!-- ATTENDANCE -->
+        <!-- =================================================
+             FINANCE
+             ================================================= -->
 
-        <a
-            href="<%= contextPath %>/admin/attendance"
-            class="sidebar-link <%= attendanceActive ? "active" : "" %>">
+        <div class="sidebar-section">
 
-            <span class="sidebar-icon">📅</span>
-
-            <span class="sidebar-label">
-                Attendance
-            </span>
-
-        </a>
+            <div class="sidebar-section-title">
+                FINANCE
+            </div>
 
 
-        <!-- ASSIGNMENTS -->
+            <!-- Fees -->
 
-        <a
-            href="<%= contextPath %>/admin/assignments"
-            class="sidebar-link <%= assignmentsActive ? "active" : "" %>">
+            <a href="<%= contextPath %>/admin/fees"
+               class="sidebar-link <%= feesActive ? "active" : "" %>">
 
-            <span class="sidebar-icon">📖</span>
+                <span class="sidebar-icon">
+                    💰
+                </span>
 
-            <span class="sidebar-label">
-                Assignments
-            </span>
+                <span class="sidebar-link-text">
+                    Fees
+                </span>
 
-        </a>
-
-
-        <!-- EXAMS -->
-
-        <a
-            href="<%= contextPath %>/admin/exams"
-            class="sidebar-link <%= examsActive ? "active" : "" %>">
-
-            <span class="sidebar-icon">📝</span>
-
-            <span class="sidebar-label">
-                Exams
-            </span>
-
-        </a>
+            </a>
 
 
-        <!-- RESULTS -->
+            <!-- Payments -->
 
-        <a
-            href="<%= contextPath %>/admin/results"
-            class="sidebar-link <%= resultsActive ? "active" : "" %>">
+            <a href="<%= contextPath %>/admin/payments"
+               class="sidebar-link <%= paymentsActive ? "active" : "" %>">
 
-            <span class="sidebar-icon">🏆</span>
+                <span class="sidebar-icon">
+                    💳
+                </span>
 
-            <span class="sidebar-label">
-                Results
-            </span>
+                <span class="sidebar-link-text">
+                    Payments
+                </span>
 
-        </a>
+            </a>
 
-
-        <div class="nav-section-title">
-            FINANCE
         </div>
 
 
-        <!-- FEES -->
+        <!-- =================================================
+             MANAGEMENT
+             ================================================= -->
 
-        <a
-            href="<%= contextPath %>/admin/fees"
-            class="sidebar-link <%= feesActive ? "active" : "" %>">
+        <div class="sidebar-section">
 
-            <span class="sidebar-icon">💰</span>
-
-            <span class="sidebar-label">
-                Fees
-            </span>
-
-        </a>
+            <div class="sidebar-section-title">
+                MANAGEMENT
+            </div>
 
 
-        <!-- PAYMENTS -->
+            <!-- Announcements -->
 
-        <a
-            href="<%= contextPath %>/admin/payments"
-            class="sidebar-link <%= paymentsActive ? "active" : "" %>">
+            <a href="<%= contextPath %>/admin/announcements"
+               class="sidebar-link <%= announcementsActive ? "active" : "" %>">
 
-            <span class="sidebar-icon">💳</span>
+                <span class="sidebar-icon">
+                    📢
+                </span>
 
-            <span class="sidebar-label">
-                Payments
-            </span>
+                <span class="sidebar-link-text">
+                    Announcements
+                </span>
 
-        </a>
+            </a>
 
 
-        <div class="nav-section-title">
-            MANAGEMENT
+            <!-- Notifications -->
+
+            <a href="<%= contextPath %>/admin/notifications"
+               class="sidebar-link <%= notificationsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    🔔
+                </span>
+
+                <span class="sidebar-link-text">
+                    Notifications
+                </span>
+
+            </a>
+
+
+            <!-- Enquiries -->
+
+            <a href="<%= contextPath %>/admin/enquiries"
+               class="sidebar-link <%= enquiriesActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    💬
+                </span>
+
+                <span class="sidebar-link-text">
+                    Enquiries
+                </span>
+
+            </a>
+
+
+            <!-- Reports -->
+
+            <a href="<%= contextPath %>/admin/reports"
+               class="sidebar-link <%= reportsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    📈
+                </span>
+
+                <span class="sidebar-link-text">
+                    Reports
+                </span>
+
+            </a>
+
+
+            <!-- Settings -->
+
+            <a href="<%= contextPath %>/admin/settings"
+               class="sidebar-link <%= settingsActive ? "active" : "" %>">
+
+                <span class="sidebar-icon">
+                    ⚙️
+                </span>
+
+                <span class="sidebar-link-text">
+                    Settings
+                </span>
+
+            </a>
+
         </div>
-
-
-        <!-- CERTIFICATES -->
-
-        <a
-            href="<%= contextPath %>/admin/certificates"
-            class="sidebar-link <%= certificatesActive ? "active" : "" %>">
-
-            <span class="sidebar-icon">🎓</span>
-
-            <span class="sidebar-label">
-                Certificates
-            </span>
-
-        </a>
-
-
-        <!-- ANNOUNCEMENTS -->
-
-        <a
-            href="<%= contextPath %>/admin/announcements"
-            class="sidebar-link <%= announcementsActive ? "active" : "" %>">
-
-            <span class="sidebar-icon">📢</span>
-
-            <span class="sidebar-label">
-                Announcements
-            </span>
-
-        </a>
-
-
-        <!-- REPORTS -->
-
-        <a
-            href="<%= contextPath %>/admin/reports"
-            class="sidebar-link <%= reportsActive ? "active" : "" %>">
-
-            <span class="sidebar-icon">📊</span>
-
-            <span class="sidebar-label">
-                Reports
-            </span>
-
-        </a>
-
-
-        <!-- SETTINGS -->
-
-        <a
-            href="<%= contextPath %>/admin/settings"
-            class="sidebar-link <%= settingsActive ? "active" : "" %>">
-
-            <span class="sidebar-icon">⚙</span>
-
-            <span class="sidebar-label">
-                Settings
-            </span>
-
-        </a>
 
     </nav>
 
 
-    <!-- SIDEBAR FOOTER -->
+    <!-- =====================================================
+         SIDEBAR FOOTER
+         ===================================================== -->
 
     <div class="sidebar-footer">
 
-        <a
-            href="<%= contextPath %>/logout"
-            class="sidebar-link logout-link">
+        <a href="<%= contextPath %>/logout"
+           class="sidebar-link sidebar-logout">
 
-            <span class="sidebar-icon">↪</span>
+            <span class="sidebar-icon">
+                🚪
+            </span>
 
-            <span class="sidebar-label">
+            <span class="sidebar-link-text">
                 Logout
             </span>
 
