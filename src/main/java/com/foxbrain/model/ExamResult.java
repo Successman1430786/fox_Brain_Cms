@@ -1,64 +1,134 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class ExamResult {
 
     private long id;
+
     private long examId;
     private long studentId;
-    private BigDecimal marksObtained;
+
+    private double marksObtained;
+
     private String grade;
     private String resultStatus;
     private String remarks;
-    private LocalDateTime publishedAt;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
-    public ExamResult() {}
+    private Timestamp publishedAt;
 
-    public ExamResult(
-            long id,
-            long examId,
-            long studentId,
-            BigDecimal marksObtained,
-            String grade,
-            String resultStatus,
-            String remarks,
-            LocalDateTime publishedAt,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+
+    private String examTitle;
+
+    private String studentName;
+    private String admissionNumber;
+
+    public ExamResult() {
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
         this.id = id;
+    }
+
+    public long getExamId() {
+        return examId;
+    }
+
+    public void setExamId(long examId) {
         this.examId = examId;
+    }
+
+    public long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(long studentId) {
         this.studentId = studentId;
+    }
+
+    public double getMarksObtained() {
+        return marksObtained;
+    }
+
+    public void setMarksObtained(double marksObtained) {
         this.marksObtained = marksObtained;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
         this.grade = grade;
+    }
+
+    public String getResultStatus() {
+        return resultStatus;
+    }
+
+    public void setResultStatus(String resultStatus) {
         this.resultStatus = resultStatus;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public Timestamp getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(Timestamp publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public long getId() { return id; }
-    public void setId(long id) { this.id = id; }
-    public long getExamId() { return examId; }
-    public void setExamId(long examId) { this.examId = examId; }
-    public long getStudentId() { return studentId; }
-    public void setStudentId(long studentId) { this.studentId = studentId; }
-    public BigDecimal getMarksObtained() { return marksObtained; }
-    public void setMarksObtained(BigDecimal marksObtained) { this.marksObtained = marksObtained; }
-    public String getGrade() { return grade; }
-    public void setGrade(String grade) { this.grade = grade; }
-    public String getResultStatus() { return resultStatus; }
-    public void setResultStatus(String resultStatus) { this.resultStatus = resultStatus; }
-    public String getRemarks() { return remarks; }
-    public void setRemarks(String remarks) { this.remarks = remarks; }
-    public LocalDateTime getPublishedAt() { return publishedAt; }
-    public void setPublishedAt(LocalDateTime publishedAt) { this.publishedAt = publishedAt; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getExamTitle() {
+        return examTitle;
+    }
+
+    public void setExamTitle(String examTitle) {
+        this.examTitle = examTitle;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getAdmissionNumber() {
+        return admissionNumber;
+    }
+
+    public void setAdmissionNumber(String admissionNumber) {
+        this.admissionNumber = admissionNumber;
+    }
 }
