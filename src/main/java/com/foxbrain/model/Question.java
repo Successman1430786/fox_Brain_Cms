@@ -1,6 +1,7 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Question {
@@ -8,20 +9,19 @@ public class Question {
     private long id;
     private Long courseId;
 
-    // Display field from JOIN
-    private String courseName;
-
     private String questionText;
     private String questionType;
     private String difficulty;
 
-    private BigDecimal defaultMarks;
-    private BigDecimal negativeMarks;
+    private double defaultMarks;
+    private double negativeMarks;
 
     private String explanation;
     private String status;
 
-    private List<QuestionOption> options;
+    private String courseName;
+
+    private List<QuestionOption> options = new ArrayList<>();
 
     public Question() {
     }
@@ -40,14 +40,6 @@ public class Question {
 
     public void setCourseId(Long courseId) {
         this.courseId = courseId;
-    }
-
-    public String getCourseName() {
-        return courseName;
-    }
-
-    public void setCourseName(String courseName) {
-        this.courseName = courseName;
     }
 
     public String getQuestionText() {
@@ -74,19 +66,19 @@ public class Question {
         this.difficulty = difficulty;
     }
 
-    public BigDecimal getDefaultMarks() {
+    public double getDefaultMarks() {
         return defaultMarks;
     }
 
-    public void setDefaultMarks(BigDecimal defaultMarks) {
+    public void setDefaultMarks(double defaultMarks) {
         this.defaultMarks = defaultMarks;
     }
 
-    public BigDecimal getNegativeMarks() {
+    public double getNegativeMarks() {
         return negativeMarks;
     }
 
-    public void setNegativeMarks(BigDecimal negativeMarks) {
+    public void setNegativeMarks(double negativeMarks) {
         this.negativeMarks = negativeMarks;
     }
 
@@ -106,11 +98,23 @@ public class Question {
         this.status = status;
     }
 
+    public String getCourseName() {
+        return courseName;
+    }
+
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
+
     public List<QuestionOption> getOptions() {
         return options;
     }
 
     public void setOptions(List<QuestionOption> options) {
         this.options = options;
+    }
+
+    public void addOption(QuestionOption option) {
+        this.options.add(option);
     }
 }

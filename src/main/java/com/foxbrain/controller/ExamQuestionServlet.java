@@ -1,7 +1,11 @@
 package com.foxbrain.controller;
 
-import java.io.IOException;
-import java.math.BigDecimal;
+import com.foxbrain.model.Exam;
+import com.foxbrain.model.ExamQuestion;
+import com.foxbrain.model.Question;
+import com.foxbrain.service.ExamQuestionService;
+import com.foxbrain.service.ExamService;
+import com.foxbrain.service.QuestionService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -9,19 +13,29 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.foxbrain.model.ExamQuestion;
-import com.foxbrain.service.ExamQuestionService;
+import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/admin/exam-questions")
 public class ExamQuestionServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private ExamQuestionService service;
+    private ExamQuestionService examQuestionService;
+    private ExamService examService;
+    private QuestionService questionService;
 
     @Override
-    public void init() throws ServletException {
-        service = new ExamQuestionService();
+    public void init() {
+
+        examQuestionService =
+                new ExamQuestionService();
+
+        examService =
+                new ExamService();
+
+        questionService =
+                new QuestionService();
     }
 
     @Override
@@ -30,27 +44,54 @@ public class ExamQuestionServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        String action =
-                request.getParameter("action");
+        try {
 
-        if (action == null ||
-            action.trim().isEmpty()) {
+            long examId =
+                    Long.parseLong(
+                            request.getParameter("examId")
+                    );
 
-            action = "list";
-        }
+            Exam exam =
+                    examService.getExamById(examId);
 
-        switch (action) {
+            List<ExamQuestion> examQuestions =
+                    examQuestionService
+                            .getQuestionsByExam(examId);
 
-            case "list":
-                list(request, response);
-                break;
+            List<Question> questions =
+                    questionService.getAllQuestions();
 
-            case "remove":
-                remove(request, response);
-                break;
+            request.setAttribute(
+                    "exam",
+                    exam
+            );
 
-            default:
-                list(request, response);
+            request.setAttribute(
+                    "examQuestions",
+                    examQuestions
+            );
+
+            request.setAttribute(
+                    "questions",
+                    questions
+            );
+
+            request.getRequestDispatcher(
+                    "/admin/exams/exam-questions.jsp"
+            ).forward(request, response);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            request.getRequestDispatcher(
+                    "/admin/exams/index.jsp"
+            ).forward(request, response);
         }
     }
 
@@ -60,345 +101,223 @@ public class ExamQuestionServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
+
         String action =
                 request.getParameter("action");
 
-        if ("add".equalsIgnoreCase(action)) {
-
-            add(request, response);
-
-        } else if ("update".equalsIgnoreCase(action)) {
-
-            update(request, response);
-
-        } else if ("reorder".equalsIgnoreCase(action)) {
-
-            reorder(request, response);
-
-        } else if ("removeAll".equalsIgnoreCase(action)) {
-
-            removeAll(request, response);
-
-        } else {
-
-            list(request, response);
-        }
-    }
-
-    private void list(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long examId =
-                parseLong(
-                        request.getParameter("examId"));
-
-        if (examId == null) {
-            redirectExam(request, response);
-            return;
-        }
-
-        request.setAttribute(
-                "examId",
-                examId);
-
-        request.setAttribute(
-                "examQuestions",
-                service.getQuestionsByExam(examId));
-
-        request.getRequestDispatcher(
-                "/admin/exams/exam-questions.jsp")
-                .forward(request, response);
-    }
-
-    private void add(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
         try {
 
-            ExamQuestion eq =
-                    buildExamQuestion(request);
+            if ("add".equalsIgnoreCase(action)) {
 
-            boolean success =
-                    service.addQuestionToExam(eq);
+                addQuestion(request, response);
 
-            redirectResult(
-                    request,
-                    response,
-                    eq.getExamId(),
-                    success ? "added" : "false");
+            } else if ("update".equalsIgnoreCase(action)) {
+
+                updateQuestion(request, response);
+
+            } else if ("delete".equalsIgnoreCase(action)) {
+
+                deleteQuestion(request, response);
+
+            } else if ("reorder".equalsIgnoreCase(action)) {
+
+                reorderQuestion(request, response);
+
+            } else {
+
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid action."
+                );
+            }
 
         } catch (Exception e) {
 
             e.printStackTrace();
 
-            redirectError(
-                    request,
-                    response,
-                    "Unable to add question to exam.");
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            doGet(request, response);
         }
     }
 
-    private void update(
+    private void addQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        try {
+        long examId =
+                Long.parseLong(
+                        request.getParameter("examId")
+                );
 
-            long id =
-                    Long.parseLong(
-                            request.getParameter("id"));
+        long questionId =
+                Long.parseLong(
+                        request.getParameter("questionId")
+                );
 
-            ExamQuestion eq =
-                    buildExamQuestion(request);
+        double marks =
+                Double.parseDouble(
+                        request.getParameter("marks")
+                );
 
-            eq.setId(id);
+        String negative =
+                request.getParameter("negativeMarks");
 
-            boolean success =
-                    service.updateExamQuestion(eq);
+        double negativeMarks = 0;
 
-            redirectResult(
-                    request,
-                    response,
-                    eq.getExamId(),
-                    success ? "updated" : "false");
+        if (negative != null &&
+                !negative.trim().isEmpty()) {
 
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to update exam question.");
-        }
-    }
-
-    private void remove(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        Long id =
-                parseLong(
-                        request.getParameter("id"));
-
-        Long examId =
-                parseLong(
-                        request.getParameter("examId"));
-
-        if (id == null || examId == null) {
-            redirectError(
-                    request,
-                    response,
-                    "Invalid question information.");
-            return;
+            negativeMarks =
+                    Double.parseDouble(negative);
         }
 
-        boolean success =
-                service.removeQuestionFromExam(id);
+        String section =
+                request.getParameter("sectionName");
 
-        redirectResult(
-                request,
-                response,
-                examId,
-                success ? "removed" : "false");
-    }
-
-    private void removeAll(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        Long examId =
-                parseLong(
-                        request.getParameter("examId"));
-
-        if (examId == null) {
-            redirectError(
-                    request,
-                    response,
-                    "Invalid exam ID.");
-            return;
-        }
-
-        boolean success =
-                service.removeAllQuestions(examId);
-
-        redirectResult(
-                request,
-                response,
-                examId,
-                success ? "removed-all" : "false");
-    }
-
-    private void reorder(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        try {
-
-            long id =
-                    Long.parseLong(
-                            request.getParameter("id"));
-
-            int order =
-                    Integer.parseInt(
-                            request.getParameter(
-                                    "questionOrder"));
-
-            long examId =
-                    Long.parseLong(
-                            request.getParameter(
-                                    "examId"));
-
-            boolean success =
-                    service.reorderQuestion(
-                            id,
-                            order);
-
-            redirectResult(
-                    request,
-                    response,
-                    examId,
-                    success ? "reordered" : "false");
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to reorder question.");
-        }
-    }
-
-    private ExamQuestion buildExamQuestion(
-            HttpServletRequest request) {
+        boolean required =
+                request.getParameter("isRequired")
+                        != null;
 
         ExamQuestion eq =
                 new ExamQuestion();
 
-        eq.setExamId(
-                Long.parseLong(
-                        request.getParameter(
-                                "examId")));
+        eq.setExamId(examId);
+        eq.setQuestionId(questionId);
+        eq.setMarks(marks);
+        eq.setNegativeMarks(negativeMarks);
+        eq.setSectionName(section);
+        eq.setRequired(required);
 
-        eq.setQuestionId(
-                Long.parseLong(
-                        request.getParameter(
-                                "questionId")));
+        examQuestionService.addQuestion(eq);
 
-        String order =
-                request.getParameter(
-                        "questionOrder");
-
-        if (order != null &&
-            !order.trim().isEmpty()) {
-
-            eq.setQuestionOrder(
-                    Integer.parseInt(order));
-        }
-
-        String marks =
-                request.getParameter(
-                        "marks");
-
-        if (marks != null &&
-            !marks.trim().isEmpty()) {
-
-            eq.setMarks(
-                    new BigDecimal(marks));
-        }
-
-        String negative =
-                request.getParameter(
-                        "negativeMarks");
-
-        if (negative != null &&
-            !negative.trim().isEmpty()) {
-
-            eq.setNegativeMarks(
-                    new BigDecimal(negative));
-        }
-
-        eq.setSectionName(
-                trim(
-                        request.getParameter(
-                                "sectionName")));
-
-        eq.setRequired(
-                request.getParameter(
-                        "isRequired") != null);
-
-        return eq;
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/exam-questions?examId="
+                        + examId
+        );
     }
 
-    private Long parseLong(String value) {
-
-        try {
-
-            if (value == null ||
-                value.trim().isEmpty()) {
-
-                return null;
-            }
-
-            return Long.parseLong(value.trim());
-
-        } catch (NumberFormatException e) {
-
-            return null;
-        }
-    }
-
-    private String trim(String value) {
-
-        return value == null ? "" : value.trim();
-    }
-
-    private void redirectExam(
+    private void updateQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
+        long id =
+                Long.parseLong(
+                        request.getParameter("id")
+                );
+
+        long examId =
+                Long.parseLong(
+                        request.getParameter("examId")
+                );
+
+        double marks =
+                Double.parseDouble(
+                        request.getParameter("marks")
+                );
+
+        double negativeMarks = 0;
+
+        String negative =
+                request.getParameter("negativeMarks");
+
+        if (negative != null &&
+                !negative.trim().isEmpty()) {
+
+            negativeMarks =
+                    Double.parseDouble(negative);
+        }
+
+        String section =
+                request.getParameter("sectionName");
+
+        boolean required =
+                request.getParameter("isRequired")
+                        != null;
+
+        ExamQuestion eq =
+                examQuestionService.getById(id);
+
+        if (eq == null) {
+            throw new IllegalArgumentException(
+                    "Exam question not found."
+            );
+        }
+
+        eq.setMarks(marks);
+        eq.setNegativeMarks(negativeMarks);
+        eq.setSectionName(section);
+        eq.setRequired(required);
+
+        examQuestionService.updateQuestion(eq);
+
         response.sendRedirect(
                 request.getContextPath()
-                + "/admin/exams?action=list");
+                        + "/admin/exam-questions?examId="
+                        + examId
+        );
     }
 
-    private void redirectResult(
+    private void deleteQuestion(
             HttpServletRequest request,
-            HttpServletResponse response,
-            long examId,
-            String result)
+            HttpServletResponse response)
             throws IOException {
+
+        long id =
+                Long.parseLong(
+                        request.getParameter("id")
+                );
+
+        long examId =
+                Long.parseLong(
+                        request.getParameter("examId")
+                );
+
+        examQuestionService.removeQuestion(id);
 
         response.sendRedirect(
                 request.getContextPath()
-                + "/admin/exam-questions?action=list&examId="
-                + examId
-                + "&success="
-                + result);
+                        + "/admin/exam-questions?examId="
+                        + examId
+        );
     }
 
-    private void redirectError(
+    private void reorderQuestion(
             HttpServletRequest request,
-            HttpServletResponse response,
-            String message)
+            HttpServletResponse response)
             throws IOException {
+
+        long id =
+                Long.parseLong(
+                        request.getParameter("id")
+                );
+
+        long examId =
+                Long.parseLong(
+                        request.getParameter("examId")
+                );
+
+        int order =
+                Integer.parseInt(
+                        request.getParameter("order")
+                );
+
+        examQuestionService.updateQuestionOrder(
+                id,
+                order
+        );
 
         response.sendRedirect(
                 request.getContextPath()
-                + "/admin/exams?action=list&error="
-                + java.net.URLEncoder.encode(
-                        message,
-                        java.nio.charset.StandardCharsets.UTF_8));
+                        + "/admin/exam-questions?examId="
+                        + examId
+        );
     }
 }

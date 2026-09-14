@@ -4,22 +4,64 @@
 <%@ page import="com.foxbrain.model.QuestionOption" %>
 
 <%
+    String contextPath = request.getContextPath();
+
     Question question =
             (Question) request.getAttribute("question");
 
     List<QuestionOption> options =
-            (List<QuestionOption>) request.getAttribute("options");
+            (List<QuestionOption>)
+                    request.getAttribute("options");
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
-
+    <meta charset="UTF-8">
     <title>Question Options - FoxBrain</title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
+        .content {
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 12px;
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
 </head>
 
 <body>
@@ -27,157 +69,115 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <h1>Question Options</h1>
 
-        <div>
+    <% if (question != null) { %>
 
-            <h1>Question Options</h1>
+        <p>
+            <strong>
+                <%= question.getQuestionText() %>
+            </strong>
+        </p>
 
-            <p>
-                <%= question == null
-                        ? ""
-                        : question.getQuestionText() %>
-            </p>
+        <div class="box">
+
+            <h3>Add Option</h3>
+
+            <form method="post"
+                  action="<%= contextPath %>/admin/question-options">
+
+                <input type="hidden"
+                       name="action"
+                       value="add">
+
+                <input type="hidden"
+                       name="questionId"
+                       value="<%= question.getId() %>">
+
+                <label>Option Text</label>
+
+                <input type="text"
+                       name="optionText"
+                       maxlength="1000"
+                       required>
+
+                <label>Order</label>
+
+                <input type="number"
+                       name="optionOrder"
+                       value="1"
+                       min="1">
+
+                <label>
+                    <input type="checkbox"
+                           name="isCorrect"
+                           style="width:auto;">
+                    Correct Answer
+                </label>
+
+                <br>
+
+                <button type="submit">
+                    Add Option
+                </button>
+
+            </form>
 
         </div>
 
-    </div>
+        <div class="box">
 
-    <div class="card">
+            <h3>Options</h3>
 
-        <h2>Add Option</h2>
+            <table>
 
-        <form method="post"
-              action="<%= request.getContextPath() %>/admin/question-bank">
+                <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Option</th>
+                    <th>Correct</th>
+                </tr>
+                </thead>
 
-            <input type="hidden"
-                   name="action"
-                   value="addOption">
+                <tbody>
 
-            <input type="hidden"
-                   name="questionId"
-                   value="<%= question.getId() %>">
+                <% if (options != null) {
 
-            <div class="form-grid">
-
-                <div class="form-group">
-
-                    <label>Option Text *</label>
-
-                    <input type="text"
-                           name="optionText"
-                           maxlength="1000"
-                           required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Order *</label>
-
-                    <input type="number"
-                           name="optionOrder"
-                           min="1"
-                           value="<%= options == null ? 1 : options.size() + 1 %>"
-                           required>
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>
-                        <input type="checkbox"
-                               name="isCorrect">
-                        Correct Answer
-                    </label>
-
-                </div>
-
-            </div>
-
-            <button type="submit"
-                    class="btn btn-primary">
-                Add Option
-            </button>
-
-        </form>
-
-    </div>
-
-    <div class="card">
-
-        <h2>Existing Options</h2>
-
-        <table class="admin-table">
-
-            <thead>
-
-            <tr>
-                <th>ID</th>
-                <th>Order</th>
-                <th>Option</th>
-                <th>Correct</th>
-                <th>Actions</th>
-            </tr>
-
-            </thead>
-
-            <tbody>
-
-            <% if (options == null || options.isEmpty()) { %>
+                    for (QuestionOption option : options) {
+                %>
 
                 <tr>
-                    <td colspan="5">
-                        No options found.
+
+                    <td>
+                        <%= option.getOptionOrder() %>
                     </td>
+
+                    <td>
+                        <%= option.getOptionText() %>
+                    </td>
+
+                    <td>
+                        <%= option.isCorrect()
+                                ? "YES"
+                                : "NO" %>
+                    </td>
+
                 </tr>
 
-            <% } else { %>
+                <%
+                    }
+                }
+                %>
 
-                <% for (QuestionOption option : options) { %>
+                </tbody>
 
-                    <tr>
+            </table>
 
-                        <td>
-                            <%= option.getId() %>
-                        </td>
+        </div>
 
-                        <td>
-                            <%= option.getOptionOrder() %>
-                        </td>
-
-                        <td>
-                            <%= option.getOptionText() %>
-                        </td>
-
-                        <td>
-                            <%= option.isCorrect()
-                                    ? "YES"
-                                    : "NO" %>
-                        </td>
-
-                        <td>
-
-                            <a class="btn btn-sm btn-danger"
-                               href="<%= request.getContextPath() %>/admin/question-bank?action=options&questionId=<%= question.getId() %>">
-                                Refresh
-                            </a>
-
-                        </td>
-
-                    </tr>
-
-                <% } %>
-
-            <% } %>
-
-            </tbody>
-
-        </table>
-
-    </div>
+    <% } %>
 
 </div>
 

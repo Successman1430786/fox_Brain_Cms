@@ -1,25 +1,17 @@
 package com.foxbrain.controller;
 
-import java.io.IOException;
+import com.foxbrain.model.ExamAttempt;
+import com.foxbrain.service.ExamAttemptService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.annotation.WebInitParam;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.foxbrain.model.ExamAttempt;
-import com.foxbrain.service.ExamAttemptService;
+import java.io.IOException;
 
-@WebServlet(
-        value = "/student/exam-attempt",
-        initParams = {
-                @WebInitParam(
-                        name = "studentSessionAttribute",
-                        value = "studentId")
-        }
-)
+@WebServlet("/exam/attempt")
 public class ExamAttemptServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -27,7 +19,7 @@ public class ExamAttemptServlet extends HttpServlet {
     private ExamAttemptService attemptService;
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         attemptService =
                 new ExamAttemptService();
     }
@@ -38,296 +30,84 @@ public class ExamAttemptServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        String action =
-                request.getParameter("action");
+        try {
 
-        if (action == null ||
-            action.trim().isEmpty()) {
+            long id =
+                    Long.parseLong(
+                            request.getParameter("id")
+                    );
 
-            action = "start";
-        }
+            ExamAttempt attempt =
+                    attemptService.getAttempt(id);
 
-        Long studentId =
-                getStudentId(request);
+            if (attempt == null) {
 
-        if (studentId == null) {
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/login.jsp");
-            return;
-        }
+                response.sendError(
+                        HttpServletResponse.SC_NOT_FOUND,
+                        "Exam attempt not found."
+                );
 
-        switch (action) {
+                return;
+            }
 
-            case "start":
-                start(request, response, studentId);
-                break;
+            request.setAttribute(
+                    "attempt",
+                    attempt
+            );
 
-            case "view":
-                view(request, response, studentId);
-                break;
+            request.getRequestDispatcher(
+                    "/exam/take.jsp"
+            ).forward(request, response);
 
-            case "submit":
-                submit(request, response, studentId, false);
-                break;
+        } catch (Exception e) {
 
-            case "autoSubmit":
-                submit(request, response, studentId, true);
-                break;
+            e.printStackTrace();
 
-            case "abandon":
-                abandon(request, response, studentId);
-                break;
-
-            default:
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/student/dashboard.jsp");
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    e.getMessage()
+            );
         }
     }
 
-    private void start(
+    @Override
+    protected void doPost(
             HttpServletRequest request,
-            HttpServletResponse response,
-            long studentId)
-            throws ServletException, IOException {
-
-        Long examId =
-                parseLong(
-                        request.getParameter(
-                                "examId"));
-
-        if (examId == null) {
-            sendError(
-                    request,
-                    response,
-                    "Invalid exam.");
-            return;
-        }
-
-        ExamAttempt attempt =
-                attemptService.startAttempt(
-                        examId,
-                        studentId);
-
-        if (attempt == null) {
-
-            sendError(
-                    request,
-                    response,
-                    "This exam cannot be started.");
-            return;
-        }
-
-        request.setAttribute(
-                "attempt",
-                attempt);
-
-        request.getRequestDispatcher(
-                "/student/exam/start.jsp")
-                .forward(request, response);
-    }
-
-    private void view(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            long studentId)
-            throws ServletException, IOException {
-
-        Long attemptId =
-                parseLong(
-                        request.getParameter(
-                                "attemptId"));
-
-        if (attemptId == null) {
-            sendError(
-                    request,
-                    response,
-                    "Invalid attempt.");
-            return;
-        }
-
-        ExamAttempt attempt =
-                attemptService.getAttemptById(
-                        attemptId);
-
-        if (attempt == null ||
-            attempt.getStudentId() != studentId) {
-
-            sendError(
-                    request,
-                    response,
-                    "Attempt not found.");
-            return;
-        }
-
-        request.setAttribute(
-                "attempt",
-                attempt);
-
-        request.getRequestDispatcher(
-                "/student/exam/take-exam.jsp")
-                .forward(request, response);
-    }
-
-    private void submit(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            long studentId,
-            boolean autoSubmit)
+            HttpServletResponse response)
             throws IOException {
-
-        Long attemptId =
-                parseLong(
-                        request.getParameter(
-                                "attemptId"));
-
-        if (attemptId == null) {
-            sendError(
-                    request,
-                    response,
-                    "Invalid attempt.");
-            return;
-        }
-
-        ExamAttempt attempt =
-                attemptService.getAttemptById(
-                        attemptId);
-
-        if (attempt == null ||
-            attempt.getStudentId() != studentId) {
-
-            sendError(
-                    request,
-                    response,
-                    "Invalid attempt.");
-            return;
-        }
-
-        boolean success;
-
-        if (autoSubmit) {
-
-            success =
-                    attemptService.autoSubmitAttempt(
-                            attemptId);
-
-        } else {
-
-            success =
-                    attemptService.submitAttempt(
-                            attemptId);
-        }
-
-        if (success) {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/student/exam-attempt?action=view&attemptId="
-                    + attemptId
-                    + "&submitted=true");
-
-        } else {
-
-            sendError(
-                    request,
-                    response,
-                    "Unable to submit exam.");
-        }
-    }
-
-    private void abandon(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            long studentId)
-            throws IOException {
-
-        Long attemptId =
-                parseLong(
-                        request.getParameter(
-                                "attemptId"));
-
-        if (attemptId == null) {
-            sendError(
-                    request,
-                    response,
-                    "Invalid attempt.");
-            return;
-        }
-
-        ExamAttempt attempt =
-                attemptService.getAttemptById(
-                        attemptId);
-
-        if (attempt == null ||
-            attempt.getStudentId() != studentId) {
-
-            sendError(
-                    request,
-                    response,
-                    "Invalid attempt.");
-            return;
-        }
-
-        boolean success =
-                attemptService.abandonAttempt(
-                        attemptId);
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/student/dashboard.jsp?success="
-                + (success ? "abandoned" : "false"));
-    }
-
-    private Long getStudentId(
-            HttpServletRequest request) {
-
-        Object value =
-                request.getSession()
-                        .getAttribute(
-                                "studentId");
-
-        if (value == null) {
-            return null;
-        }
-
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
-        }
-
-        return parseLong(
-                value.toString());
-    }
-
-    private Long parseLong(String value) {
 
         try {
 
-            if (value == null ||
-                value.trim().isEmpty()) {
+            long examId =
+                    Long.parseLong(
+                            request.getParameter("examId")
+                    );
 
-                return null;
-            }
+            long studentId =
+                    Long.parseLong(
+                            request.getParameter("studentId")
+                    );
 
-            return Long.parseLong(value.trim());
+            long attemptId =
+                    attemptService.startExam(
+                            examId,
+                            studentId
+                    );
 
-        } catch (NumberFormatException e) {
+            response.sendRedirect(
+                    request.getContextPath()
+                            + "/exam/attempt?id="
+                            + attemptId
+            );
 
-            return null;
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    e.getMessage()
+            );
         }
-    }
-
-    private void sendError(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String message)
-            throws IOException {
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/student/dashboard.jsp?error="
-                + java.net.URLEncoder.encode(
-                        message,
-                        java.nio.charset.StandardCharsets.UTF_8));
     }
 }

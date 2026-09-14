@@ -1,346 +1,387 @@
 package com.foxbrain.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import com.foxbrain.dao.ExamAttemptDAO;
-import com.foxbrain.dao.ExamDAO;
 import com.foxbrain.dao.ExamResultDAO;
-import com.foxbrain.model.Exam;
-import com.foxbrain.model.ExamAttempt;
 import com.foxbrain.model.ExamResult;
+
+import java.util.List;
 
 public class ExamResultService {
 
-    private final ExamResultDAO resultDAO =
-            new ExamResultDAO();
+    private final ExamResultDAO resultDAO;
 
-    private final ExamAttemptDAO attemptDAO =
-            new ExamAttemptDAO();
+    public ExamResultService() {
+        this.resultDAO = new ExamResultDAO();
+    }
 
-    private final ExamDAO examDAO =
-            new ExamDAO();
+    // =====================================================
+    // GET ALL RESULTS
+    // =====================================================
 
     public List<ExamResult> getAllResults() {
-        return resultDAO.getAll();
-    }
 
-    public ExamResult getResultById(long id) {
+        try {
+            return resultDAO.getAll();
 
-        if (id <= 0) {
-            return null;
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load results.",
+                    e
+            );
         }
-
-        return resultDAO.getById(id);
     }
 
-    public ExamResult getResult(long examId,
-                                long studentId) {
+    // =====================================================
+    // GET RESULT
+    // =====================================================
 
-        if (examId <= 0 || studentId <= 0) {
-            return null;
+    public ExamResult getResult(long id) {
+
+        validateId(id);
+
+        try {
+            return resultDAO.getById(id);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load result.",
+                    e
+            );
         }
-
-        return resultDAO.getByExamAndStudent(
-                examId,
-                studentId);
     }
 
-    public List<ExamResult> getResultsByExam(long examId) {
+    // =====================================================
+    // GET RESULT BY EXAM + STUDENT
+    // =====================================================
 
-        if (examId <= 0) {
-            return List.of();
+    public ExamResult getResultByExamAndStudent(
+            long examId,
+            long studentId) {
+
+        validateId(examId);
+        validateId(studentId);
+
+        try {
+
+            return resultDAO.getByExamAndStudent(
+                    examId,
+                    studentId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load student result.",
+                    e
+            );
         }
-
-        return resultDAO.getByExamId(examId);
     }
+
+    // =====================================================
+    // CREATE RESULT
+    // =====================================================
+
+    public long createResult(
+            ExamResult result) {
+
+        validateResult(result);
+
+        try {
+
+            boolean exists =
+                    resultDAO.exists(
+                            result.getExamId(),
+                            result.getStudentId()
+                    );
+
+            if (exists) {
+                throw new IllegalArgumentException(
+                        "Result already exists for this student and exam."
+                );
+            }
+
+            return resultDAO.create(
+                    result
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            if (e instanceof IllegalArgumentException) {
+                throw (IllegalArgumentException) e;
+            }
+
+            throw new RuntimeException(
+                    "Unable to create result.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // UPDATE RESULT
+    // =====================================================
+
+    public boolean updateResult(
+            ExamResult result) {
+
+        validateResult(result);
+
+        validateId(result.getId());
+
+        try {
+
+            return resultDAO.update(
+                    result
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to update result.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // PUBLISH RESULT
+    // =====================================================
+
+    public boolean publishResult(long id) {
+
+        validateId(id);
+
+        try {
+
+            return resultDAO.publish(id);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to publish result.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // UNPUBLISH RESULT
+    // =====================================================
+
+    public boolean unpublishResult(long id) {
+
+        validateId(id);
+
+        try {
+
+            return resultDAO.unpublish(id);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to unpublish result.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET RESULTS BY EXAM
+    // =====================================================
+
+    public List<ExamResult> getResultsByExam(
+            long examId) {
+
+        validateId(examId);
+
+        try {
+
+            return resultDAO.getByExamId(
+                    examId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load exam results.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET RESULTS BY STUDENT
+    // =====================================================
 
     public List<ExamResult> getResultsByStudent(
             long studentId) {
 
-        if (studentId <= 0) {
-            return List.of();
-        }
+        validateId(studentId);
 
-        return resultDAO.getByStudentId(studentId);
+        try {
+
+            return resultDAO.getByStudentId(
+                    studentId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load student results.",
+                    e
+            );
+        }
     }
 
-    public boolean createResult(ExamResult result) {
+    // =====================================================
+    // CALCULATE OBTAINED MARKS
+    // =====================================================
 
-        if (!validateResult(result)) {
-            return false;
+    public double calculateObtainedMarks(
+            long examId,
+            long studentId) {
+
+        validateId(examId);
+        validateId(studentId);
+
+        try {
+
+            return resultDAO.getTotalObtainedMarks(
+                    examId,
+                    studentId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to calculate obtained marks.",
+                    e
+            );
         }
-
-        if (resultDAO.exists(
-                result.getExamId(),
-                result.getStudentId())) {
-
-            return false;
-        }
-
-        Exam exam =
-                examDAO.getById(
-                        result.getExamId());
-
-        if (exam == null) {
-            return false;
-        }
-
-        calculateResultStatus(
-                result,
-                exam);
-
-        return resultDAO.create(result);
     }
 
-    public boolean createResultFromAttempt(
-            long attemptId) {
+    // =====================================================
+    // GRADE CALCULATION
+    // =====================================================
 
-        if (attemptId <= 0) {
-            return false;
+    public String calculateGrade(
+            double marks,
+            double totalMarks) {
+
+        if (totalMarks <= 0) {
+            return "N/A";
         }
 
-        ExamAttempt attempt =
-                attemptDAO.getById(attemptId);
+        double percentage =
+                (marks / totalMarks) * 100.0;
 
-        if (attempt == null) {
-            return false;
-        }
-
-        if (!"EVALUATED".equalsIgnoreCase(
-                attempt.getStatus())) {
-
-            return false;
-        }
-
-        if (resultDAO.exists(
-                attempt.getExamId(),
-                attempt.getStudentId())) {
-
-            return false;
-        }
-
-        Exam exam =
-                examDAO.getById(
-                        attempt.getExamId());
-
-        if (exam == null) {
-            return false;
-        }
-
-        ExamResult result =
-                new ExamResult();
-
-        result.setExamId(
-                attempt.getExamId());
-
-        result.setStudentId(
-                attempt.getStudentId());
-
-        result.setMarksObtained(
-                attempt.getObtainedMarks());
-
-        calculateResultStatus(
-                result,
-                exam);
-
-        return resultDAO.create(result);
-    }
-
-    public boolean updateResult(ExamResult result) {
-
-        if (result == null ||
-            result.getId() <= 0) {
-
-            return false;
-        }
-
-        if (!validateResult(result)) {
-            return false;
-        }
-
-        Exam exam =
-                examDAO.getById(
-                        result.getExamId());
-
-        if (exam == null) {
-            return false;
-        }
-
-        calculateResultStatus(
-                result,
-                exam);
-
-        return resultDAO.update(result);
-    }
-
-    public boolean publishResult(long resultId) {
-
-        if (resultId <= 0) {
-            return false;
-        }
-
-        ExamResult result =
-                resultDAO.getById(resultId);
-
-        if (result == null) {
-            return false;
-        }
-
-        return resultDAO.publish(resultId);
-    }
-
-    public boolean unpublishResult(long resultId) {
-
-        if (resultId <= 0) {
-            return false;
-        }
-
-        ExamResult result =
-                resultDAO.getById(resultId);
-
-        if (result == null) {
-            return false;
-        }
-
-        return resultDAO.unpublish(resultId);
-    }
-
-    private void calculateResultStatus(
-            ExamResult result,
-            Exam exam) {
-
-        BigDecimal obtained =
-                result.getMarksObtained();
-
-        BigDecimal passing =
-                exam.getPassingMarks();
-
-        if (obtained == null) {
-            result.setResultStatus("WITHHELD");
-            return;
-        }
-
-        if (passing == null) {
-            /*
-             * If passing_marks is NULL, do not
-             * automatically mark PASS/FAIL.
-             */
-            result.setResultStatus("WITHHELD");
-            return;
-        }
-
-        if (obtained.compareTo(passing) >= 0) {
-            result.setResultStatus("PASS");
-        } else {
-            result.setResultStatus("FAIL");
-        }
-
-        result.setGrade(
-                calculateGrade(
-                        obtained,
-                        exam.getTotalMarks()));
-    }
-
-    private String calculateGrade(
-            BigDecimal obtained,
-            BigDecimal totalMarks) {
-
-        if (obtained == null ||
-            totalMarks == null ||
-            totalMarks.compareTo(BigDecimal.ZERO) <= 0) {
-
-            return null;
-        }
-
-        BigDecimal percentage =
-                obtained
-                        .multiply(new BigDecimal("100"))
-                        .divide(
-                                totalMarks,
-                                2,
-                                java.math.RoundingMode.HALF_UP);
-
-        if (percentage.compareTo(
-                new BigDecimal("90")) >= 0) {
-
+        if (percentage >= 90) {
             return "A+";
-
-        } else if (percentage.compareTo(
-                new BigDecimal("80")) >= 0) {
-
-            return "A";
-
-        } else if (percentage.compareTo(
-                new BigDecimal("70")) >= 0) {
-
-            return "B";
-
-        } else if (percentage.compareTo(
-                new BigDecimal("60")) >= 0) {
-
-            return "C";
-
-        } else if (percentage.compareTo(
-                new BigDecimal("50")) >= 0) {
-
-            return "D";
-
-        } else {
-
-            return "F";
         }
+
+        if (percentage >= 80) {
+            return "A";
+        }
+
+        if (percentage >= 70) {
+            return "B+";
+        }
+
+        if (percentage >= 60) {
+            return "B";
+        }
+
+        if (percentage >= 50) {
+            return "C";
+        }
+
+        if (percentage >= 40) {
+            return "D";
+        }
+
+        return "F";
     }
 
-    private boolean validateResult(
+    // =====================================================
+    // PASS / FAIL
+    // =====================================================
+
+    public String calculateResultStatus(
+            double marks,
+            Double passingMarks) {
+
+        if (passingMarks == null) {
+            return "PASS";
+        }
+
+        return marks >= passingMarks
+                ? "PASS"
+                : "FAIL";
+    }
+
+    // =====================================================
+    // VALIDATE RESULT
+    // =====================================================
+
+    private void validateResult(
             ExamResult result) {
 
         if (result == null) {
-            return false;
+            throw new IllegalArgumentException(
+                    "Result cannot be null."
+            );
         }
 
-        if (result.getExamId() <= 0) {
-            return false;
+        validateId(result.getExamId());
+        validateId(result.getStudentId());
+
+        if (result.getMarksObtained() < 0) {
+            throw new IllegalArgumentException(
+                    "Marks obtained cannot be negative."
+            );
         }
 
-        if (result.getStudentId() <= 0) {
-            return false;
+        if (result.getResultStatus() == null ||
+                result.getResultStatus()
+                        .trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Result status is required."
+            );
         }
-
-        if (result.getMarksObtained() == null) {
-            return false;
-        }
-
-        if (result.getMarksObtained()
-                .compareTo(BigDecimal.ZERO) < 0) {
-
-            return false;
-        }
-
-        if (!isValidResultStatus(
-                result.getResultStatus())) {
-
-            return false;
-        }
-
-        return true;
     }
 
-    private boolean isValidResultStatus(
-            String status) {
+    // =====================================================
+    // VALIDATE ID
+    // =====================================================
 
-        if (status == null ||
-            status.trim().isEmpty()) {
+    private void validateId(long id) {
 
-            return true;
+        if (id <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid ID."
+            );
         }
-
-        String value =
-                status.trim().toUpperCase();
-
-        return value.equals("PASS")
-                || value.equals("FAIL")
-                || value.equals("ABSENT")
-                || value.equals("WITHHELD");
     }
 }

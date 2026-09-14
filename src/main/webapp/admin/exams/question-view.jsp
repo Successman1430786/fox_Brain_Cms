@@ -2,27 +2,47 @@
 <%@ page import="com.foxbrain.model.Question" %>
 
 <%
-    Question q =
-            (Question) request.getAttribute("question");
+    String contextPath = request.getContextPath();
 
-    if (q == null) {
-        response.sendRedirect(
-            request.getContextPath()
-            + "/admin/question-bank?action=list"
-        );
-        return;
-    }
+    Question question =
+            (Question) request.getAttribute("question");
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
-
+    <meta charset="UTF-8">
     <title>Question - FoxBrain</title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
+        .content {
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 900px;
+        }
+
+        .meta {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .item {
+            background: #f8fafc;
+            padding: 15px;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,77 +50,73 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <h1>Question Details</h1>
 
-        <div>
-            <h1>Question #<%= q.getId() %></h1>
-        </div>
+    <div class="box">
 
-        <div>
+        <% if (question != null) { %>
 
-            <a href="<%= request.getContextPath() %>/admin/question-bank?action=edit&id=<%= q.getId() %>"
-               class="btn btn-primary">
-                Edit
-            </a>
+            <div class="meta">
 
-            <a href="<%= request.getContextPath() %>/admin/question-bank?action=options&questionId=<%= q.getId() %>"
-               class="btn btn-secondary">
-                Manage Options
-            </a>
+                <div class="item">
+                    <strong>ID</strong><br>
+                    <%= question.getId() %>
+                </div>
 
-        </div>
+                <div class="item">
+                    <strong>Type</strong><br>
+                    <%= question.getQuestionType() %>
+                </div>
 
-    </div>
+                <div class="item">
+                    <strong>Difficulty</strong><br>
+                    <%= question.getDifficulty() %>
+                </div>
 
-    <div class="card">
+                <div class="item">
+                    <strong>Marks</strong><br>
+                    <%= question.getDefaultMarks() %>
+                </div>
 
-        <h2>Question</h2>
+                <div class="item">
+                    <strong>Negative Marks</strong><br>
+                    <%= question.getNegativeMarks() %>
+                </div>
 
-        <p>
-            <%= q.getQuestionText() %>
-        </p>
+                <div class="item">
+                    <strong>Status</strong><br>
+                    <%= question.getStatus() %>
+                </div>
 
-        <hr>
+            </div>
 
-        <p>
-            <strong>Type:</strong>
-            <%= q.getQuestionType() %>
-        </p>
+            <h3>Question</h3>
 
-        <p>
-            <strong>Difficulty:</strong>
-            <%= q.getDifficulty() %>
-        </p>
+            <p>
+                <%= question.getQuestionText() %>
+            </p>
 
-        <p>
-            <strong>Marks:</strong>
-            <%= q.getDefaultMarks() %>
-        </p>
+            <h3>Explanation</h3>
 
-        <p>
-            <strong>Negative Marks:</strong>
-            <%= q.getNegativeMarks() %>
-        </p>
+            <p>
+                <%= question.getExplanation() != null
+                        ? question.getExplanation()
+                        : "No explanation." %>
+            </p>
 
-        <p>
-            <strong>Status:</strong>
-            <%= q.getStatus() %>
-        </p>
+        <% } else { %>
 
-    </div>
+            <p>Question not found.</p>
 
-    <div class="card">
+        <% } %>
 
-        <h2>Explanation</h2>
+        <br>
 
-        <p>
-            <%= q.getExplanation() == null ||
-                q.getExplanation().isEmpty()
-                ? "No explanation available."
-                : q.getExplanation() %>
-        </p>
+        <a href="<%= contextPath %>/admin/questions">
+            Back to Question Bank
+        </a>
 
     </div>
 

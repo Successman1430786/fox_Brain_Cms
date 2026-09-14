@@ -3,54 +3,51 @@ package com.foxbrain.dao;
 import com.foxbrain.model.ExamResult;
 import com.foxbrain.util.DBConnection;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ExamResultDAO {
 
-    public List<ExamResult> getAll() throws SQLException {
-
-        List<ExamResult> results = new ArrayList<>();
+    public List<ExamResult> getAll()
+            throws SQLException {
 
         String sql =
                 "SELECT er.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
+                "s.first_name, s.last_name, " +
                 "s.admission_number " +
                 "FROM exam_results er " +
-                "INNER JOIN exams e ON er.exam_id = e.id " +
-                "INNER JOIN students s ON er.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "ORDER BY er.created_at DESC";
+                "INNER JOIN exams e ON er.exam_id=e.id " +
+                "INNER JOIN students s ON er.student_id=s.id " +
+                "ORDER BY er.id DESC";
+
+        List<ExamResult> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                results.add(mapRow(rs));
+                list.add(mapRow(rs));
             }
         }
 
-        return results;
+        return list;
     }
 
-    public ExamResult getById(long id) throws SQLException {
+    public ExamResult getById(long id)
+            throws SQLException {
 
         String sql =
                 "SELECT er.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
+                "s.first_name, s.last_name, " +
                 "s.admission_number " +
                 "FROM exam_results er " +
-                "INNER JOIN exams e ON er.exam_id = e.id " +
-                "INNER JOIN students s ON er.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE er.id = ?";
+                "INNER JOIN exams e ON er.exam_id=e.id " +
+                "INNER JOIN students s ON er.student_id=s.id " +
+                "WHERE er.id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -70,20 +67,19 @@ public class ExamResultDAO {
 
     public ExamResult getByExamAndStudent(
             long examId,
-            long studentId) throws SQLException {
+            long studentId)
+            throws SQLException {
 
         String sql =
                 "SELECT er.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
+                "s.first_name, s.last_name, " +
                 "s.admission_number " +
                 "FROM exam_results er " +
-                "INNER JOIN exams e ON er.exam_id = e.id " +
-                "INNER JOIN students s ON er.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE er.exam_id = ? " +
-                "AND er.student_id = ?";
+                "INNER JOIN exams e ON er.exam_id=e.id " +
+                "INNER JOIN students s ON er.student_id=s.id " +
+                "WHERE er.exam_id=? " +
+                "AND er.student_id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -102,49 +98,39 @@ public class ExamResultDAO {
         return null;
     }
 
-    public long create(ExamResult result) throws SQLException {
+    public long create(ExamResult result)
+            throws SQLException {
 
         String sql =
-                "INSERT INTO exam_results (" +
-                "exam_id, student_id, marks_obtained, grade, " +
-                "result_status, remarks, published_at" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "INSERT INTO exam_results " +
+                "(exam_id, student_id, marks_obtained, grade, " +
+                "result_status, remarks) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(
-                     sql,
-                     Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps =
+                     con.prepareStatement(sql,
+                             Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, result.getExamId());
             ps.setLong(2, result.getStudentId());
 
-            ps.setBigDecimal(
-                    3,
-                    result.getMarksObtained()
-            );
+            ps.setDouble(3,
+                    result.getMarksObtained());
 
-            ps.setString(4, result.getGrade());
-            ps.setString(5, result.getResultStatus());
-            ps.setString(6, result.getRemarks());
+            ps.setString(4,
+                    result.getGrade());
 
-            if (result.getPublishedAt() != null) {
-                ps.setTimestamp(
-                        7,
-                        Timestamp.valueOf(
-                                result.getPublishedAt()
-                        )
-                );
-            } else {
-                ps.setNull(7, Types.TIMESTAMP);
-            }
+            ps.setString(5,
+                    result.getResultStatus());
 
-            int affected = ps.executeUpdate();
+            ps.setString(6,
+                    result.getRemarks());
 
-            if (affected == 0) {
-                throw new SQLException("Creating exam result failed.");
-            }
+            ps.executeUpdate();
 
-            try (ResultSet keys = ps.getGeneratedKeys()) {
+            try (ResultSet keys =
+                         ps.getGeneratedKeys()) {
 
                 if (keys.next()) {
                     return keys.getLong(1);
@@ -152,9 +138,7 @@ public class ExamResultDAO {
             }
         }
 
-        throw new SQLException(
-                "Creating exam result failed. No ID returned."
-        );
+        return 0;
     }
 
     public boolean update(ExamResult result)
@@ -162,93 +146,81 @@ public class ExamResultDAO {
 
         String sql =
                 "UPDATE exam_results SET " +
-                "marks_obtained = ?, " +
-                "grade = ?, " +
-                "result_status = ?, " +
-                "remarks = ?, " +
-                "published_at = ? " +
-                "WHERE id = ?";
+                "marks_obtained=?, grade=?, result_status=?, " +
+                "remarks=? " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setBigDecimal(
-                    1,
-                    result.getMarksObtained()
-            );
+            ps.setDouble(1,
+                    result.getMarksObtained());
 
-            ps.setString(2, result.getGrade());
-            ps.setString(3, result.getResultStatus());
-            ps.setString(4, result.getRemarks());
+            ps.setString(2,
+                    result.getGrade());
 
-            if (result.getPublishedAt() != null) {
-                ps.setTimestamp(
-                        5,
-                        Timestamp.valueOf(
-                                result.getPublishedAt()
-                        )
-                );
-            } else {
-                ps.setNull(5, Types.TIMESTAMP);
-            }
+            ps.setString(3,
+                    result.getResultStatus());
 
-            ps.setLong(6, result.getId());
+            ps.setString(4,
+                    result.getRemarks());
+
+            ps.setLong(5,
+                    result.getId());
 
             return ps.executeUpdate() > 0;
         }
     }
 
-    public boolean publish(long resultId)
+    public boolean publish(long id)
             throws SQLException {
 
         String sql =
-                "UPDATE exam_results SET " +
-                "published_at = CURRENT_TIMESTAMP " +
-                "WHERE id = ?";
+                "UPDATE exam_results " +
+                "SET published_at=NOW() " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setLong(1, resultId);
+            ps.setLong(1, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
-    public boolean unpublish(long resultId)
+    public boolean unpublish(long id)
             throws SQLException {
 
         String sql =
-                "UPDATE exam_results SET " +
-                "published_at = NULL " +
-                "WHERE id = ?";
+                "UPDATE exam_results " +
+                "SET published_at=NULL " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setLong(1, resultId);
+            ps.setLong(1, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
-    public List<ExamResult> getByExamId(
-            long examId) throws SQLException {
-
-        List<ExamResult> results = new ArrayList<>();
+    public List<ExamResult> getByExamId(long examId)
+            throws SQLException {
 
         String sql =
                 "SELECT er.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
+                "s.first_name, s.last_name, " +
                 "s.admission_number " +
                 "FROM exam_results er " +
-                "INNER JOIN exams e ON er.exam_id = e.id " +
-                "INNER JOIN students s ON er.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE er.exam_id = ? " +
-                "ORDER BY s.admission_number ASC";
+                "INNER JOIN exams e ON er.exam_id=e.id " +
+                "INNER JOIN students s ON er.student_id=s.id " +
+                "WHERE er.exam_id=? " +
+                "ORDER BY er.marks_obtained DESC";
+
+        List<ExamResult> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -258,31 +230,30 @@ public class ExamResultDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    results.add(mapRow(rs));
+                    list.add(mapRow(rs));
                 }
             }
         }
 
-        return results;
+        return list;
     }
 
     public List<ExamResult> getByStudentId(
-            long studentId) throws SQLException {
-
-        List<ExamResult> results = new ArrayList<>();
+            long studentId)
+            throws SQLException {
 
         String sql =
                 "SELECT er.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
+                "s.first_name, s.last_name, " +
                 "s.admission_number " +
                 "FROM exam_results er " +
-                "INNER JOIN exams e ON er.exam_id = e.id " +
-                "INNER JOIN students s ON er.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE er.student_id = ? " +
-                "ORDER BY er.created_at DESC";
+                "INNER JOIN exams e ON er.exam_id=e.id " +
+                "INNER JOIN students s ON er.student_id=s.id " +
+                "WHERE er.student_id=? " +
+                "ORDER BY er.id DESC";
+
+        List<ExamResult> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -292,23 +263,23 @@ public class ExamResultDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    results.add(mapRow(rs));
+                    list.add(mapRow(rs));
                 }
             }
         }
 
-        return results;
+        return list;
     }
 
     public boolean exists(
             long examId,
-            long studentId) throws SQLException {
+            long studentId)
+            throws SQLException {
 
         String sql =
                 "SELECT COUNT(*) " +
                 "FROM exam_results " +
-                "WHERE exam_id = ? " +
-                "AND student_id = ?";
+                "WHERE exam_id=? AND student_id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -327,15 +298,19 @@ public class ExamResultDAO {
         return false;
     }
 
-    public BigDecimal getTotalObtainedMarks(
+    public double getTotalObtainedMarks(
             long examId,
-            long studentId) throws SQLException {
+            long studentId)
+            throws SQLException {
 
         String sql =
-                "SELECT marks_obtained " +
-                "FROM exam_results " +
-                "WHERE exam_id = ? " +
-                "AND student_id = ?";
+                "SELECT COALESCE(SUM(ea.marks_obtained),0) " +
+                "FROM exam_answers ea " +
+                "INNER JOIN exam_attempts at " +
+                "ON ea.attempt_id=at.id " +
+                "WHERE at.exam_id=? " +
+                "AND at.student_id=? " +
+                "AND ea.evaluated=TRUE";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -346,78 +321,66 @@ public class ExamResultDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 if (rs.next()) {
-                    return rs.getBigDecimal("marks_obtained");
+                    return rs.getDouble(1);
                 }
             }
         }
 
-        return null;
+        return 0;
     }
 
     private ExamResult mapRow(ResultSet rs)
             throws SQLException {
 
-        ExamResult result = new ExamResult();
+        ExamResult r = new ExamResult();
 
-        result.setId(rs.getLong("id"));
-        result.setExamId(rs.getLong("exam_id"));
-        result.setStudentId(rs.getLong("student_id"));
+        r.setId(rs.getLong("id"));
 
-        result.setExamTitle(
-                rs.getString("exam_title")
-        );
+        r.setExamId(
+                rs.getLong("exam_id"));
 
-        result.setStudentName(
-                rs.getString("student_name")
-        );
+        r.setStudentId(
+                rs.getLong("student_id"));
 
-        result.setAdmissionNumber(
-                rs.getString("admission_number")
-        );
+        r.setMarksObtained(
+                rs.getDouble("marks_obtained"));
 
-        result.setMarksObtained(
-                rs.getBigDecimal("marks_obtained")
-        );
+        r.setGrade(
+                rs.getString("grade"));
 
-        result.setGrade(
-                rs.getString("grade")
-        );
+        r.setResultStatus(
+                rs.getString("result_status"));
 
-        result.setResultStatus(
-                rs.getString("result_status")
-        );
+        r.setRemarks(
+                rs.getString("remarks"));
 
-        result.setRemarks(
-                rs.getString("remarks")
-        );
+        r.setPublishedAt(
+                rs.getTimestamp("published_at"));
 
-        Timestamp publishedAt =
-                rs.getTimestamp("published_at");
+        r.setCreatedAt(
+                rs.getTimestamp("created_at"));
 
-        if (publishedAt != null) {
-            result.setPublishedAt(
-                    publishedAt.toLocalDateTime()
-            );
-        }
+        r.setUpdatedAt(
+                rs.getTimestamp("updated_at"));
 
-        Timestamp createdAt =
-                rs.getTimestamp("created_at");
+        r.setExamTitle(
+                rs.getString("exam_title"));
 
-        if (createdAt != null) {
-            result.setCreatedAt(
-                    createdAt.toLocalDateTime()
-            );
-        }
+        String first =
+                rs.getString("first_name");
 
-        Timestamp updatedAt =
-                rs.getTimestamp("updated_at");
+        String last =
+                rs.getString("last_name");
 
-        if (updatedAt != null) {
-            result.setUpdatedAt(
-                    updatedAt.toLocalDateTime()
-            );
-        }
+        String name =
+                ((first == null ? "" : first) + " " +
+                 (last == null ? "" : last)).trim();
 
-        return result;
+        r.setStudentName(name);
+
+        r.setAdmissionNumber(
+                rs.getString("admission_number"));
+
+        return r;
     }
 }

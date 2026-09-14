@@ -2,11 +2,14 @@
 <%@ page import="com.foxbrain.model.Exam" %>
 
 <%
-    Exam exam = (Exam) request.getAttribute("exam");
+    String contextPath = request.getContextPath();
+
+    Exam exam =
+            (Exam) request.getAttribute("exam");
 
     if (exam == null) {
         response.sendRedirect(
-            request.getContextPath() + "/admin/exams?action=list"
+                contextPath + "/admin/exams"
         );
         return;
     }
@@ -15,12 +18,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+    <meta charset="UTF-8">
     <title>Edit Exam - FoxBrain</title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
+        .content {
+            padding: 30px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 1000px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        .checks {
+            display: flex;
+            gap: 25px;
+        }
+
+        .checks label {
+            font-weight: normal;
+        }
+
+        .checks input {
+            width: auto;
+        }
+
+        .actions {
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        .cancel {
+            margin-left: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -28,26 +103,14 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <h1>Edit Exam</h1>
 
-        <div>
-            <h1>Edit Exam</h1>
-            <p>Update examination information.</p>
-        </div>
-
-        <a href="<%= request.getContextPath() %>/admin/exams?action=view&id=<%= exam.getId() %>"
-           class="btn btn-secondary">
-            Back
-        </a>
-
-    </div>
-
-    <div class="card">
+    <div class="form-box">
 
         <form method="post"
-              action="<%= request.getContextPath() %>/admin/exams">
+              action="<%= contextPath %>/admin/exams">
 
             <input type="hidden"
                    name="action"
@@ -57,37 +120,30 @@
                    name="id"
                    value="<%= exam.getId() %>">
 
-            <div class="form-grid">
+            <div class="grid">
 
-                <div class="form-group">
-
-                    <label>Batch ID *</label>
+                <div>
+                    <label>Batch ID</label>
 
                     <input type="number"
                            name="batchId"
-                           min="1"
-                           required
-                           value="<%= exam.getBatchId() %>">
-
+                           value="<%= exam.getBatchId() %>"
+                           required>
                 </div>
 
-                <div class="form-group">
-
-                    <label>Exam Title *</label>
+                <div>
+                    <label>Exam Title</label>
 
                     <input type="text"
                            name="title"
-                           maxlength="255"
-                           required
-                           value="<%= exam.getTitle() %>">
-
+                           value="<%= exam.getTitle() %>"
+                           required>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <label>Exam Type</label>
 
-                    <label>Exam Type *</label>
-
-                    <select name="examType" required>
+                    <select name="examType">
 
                         <option value="QUIZ"
                             <%= "QUIZ".equals(exam.getExamType()) ? "selected" : "" %>>
@@ -120,17 +176,12 @@
                         </option>
 
                     </select>
-
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <label>Exam Mode</label>
 
-                    <label>Exam Mode *</label>
-
-                    <select name="examMode"
-                            id="examMode"
-                            required
-                            onchange="toggleRoom()">
+                    <select name="examMode">
 
                         <option value="ONLINE"
                             <%= "ONLINE".equals(exam.getExamMode()) ? "selected" : "" %>>
@@ -143,89 +194,68 @@
                         </option>
 
                     </select>
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Exam Date</label>
 
                     <input type="date"
                            name="examDate"
-                           value="<%= exam.getExamDate() == null ? "" : exam.getExamDate() %>">
-
+                           value="<%= exam.getExamDate() != null ? exam.getExamDate() : "" %>">
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <label>Room</label>
 
+                    <input type="text"
+                           name="roomName"
+                           value="<%= exam.getRoomName() != null ? exam.getRoomName() : "" %>">
+                </div>
+
+                <div>
                     <label>Start Time</label>
 
                     <input type="time"
                            name="startTime"
-                           value="<%= exam.getStartTime() == null ? "" : exam.getStartTime() %>">
-
+                           value="<%= exam.getStartTime() != null ? exam.getStartTime().toString().substring(0,5) : "" %>">
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>End Time</label>
 
                     <input type="time"
                            name="endTime"
-                           value="<%= exam.getEndTime() == null ? "" : exam.getEndTime() %>">
-
+                           value="<%= exam.getEndTime() != null ? exam.getEndTime().toString().substring(0,5) : "" %>">
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Duration</label>
 
                     <input type="number"
                            name="durationMinutes"
-                           min="1"
-                           value="<%= exam.getDurationMinutes() == null ? "" : exam.getDurationMinutes() %>">
-
+                           value="<%= exam.getDurationMinutes() %>">
                 </div>
 
-                <div class="form-group">
-
-                    <label>Total Marks *</label>
+                <div>
+                    <label>Total Marks</label>
 
                     <input type="number"
                            name="totalMarks"
-                           min="0.01"
                            step="0.01"
-                           required
-                           value="<%= exam.getTotalMarks() %>">
-
+                           value="<%= exam.getTotalMarks() %>"
+                           required>
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Passing Marks</label>
 
                     <input type="number"
                            name="passingMarks"
-                           min="0"
                            step="0.01"
-                           value="<%= exam.getPassingMarks() == null ? "" : exam.getPassingMarks() %>">
-
+                           value="<%= exam.getPassingMarks() %>">
                 </div>
 
-                <div class="form-group">
-
-                    <label>Room Name</label>
-
-                    <input type="text"
-                           name="roomName"
-                           id="roomName"
-                           maxlength="100"
-                           value="<%= exam.getRoomName() == null ? "" : exam.getRoomName() %>">
-
-                </div>
-
-                <div class="form-group">
-
+                <div>
                     <label>Status</label>
 
                     <select name="status">
@@ -251,72 +281,65 @@
                         </option>
 
                     </select>
+                </div>
+
+                <div class="full">
+
+                    <label>Instructions</label>
+
+                    <textarea name="instructions"><%= exam.getInstructions() != null ? exam.getInstructions() : "" %></textarea>
+
+                </div>
+
+                <div class="full">
+
+                    <div class="checks">
+
+                        <label>
+                            <input type="checkbox"
+                                   name="allowNavigation"
+                                   <%= exam.isAllowNavigation() ? "checked" : "" %>>
+                            Allow Navigation
+                        </label>
+
+                        <label>
+                            <input type="checkbox"
+                                   name="shuffleQuestions"
+                                   <%= exam.isShuffleQuestions() ? "checked" : "" %>>
+                            Shuffle Questions
+                        </label>
+
+                        <label>
+                            <input type="checkbox"
+                                   name="shuffleOptions"
+                                   <%= exam.isShuffleOptions() ? "checked" : "" %>>
+                            Shuffle Options
+                        </label>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <div class="form-group">
+            <div class="actions">
 
-                <label>Instructions</label>
+                <button type="submit">
+                    Update Exam
+                </button>
 
-                <textarea name="instructions"
-                          rows="6"><%= exam.getInstructions() == null ? "" : exam.getInstructions() %></textarea>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>
-                    <input type="checkbox"
-                           name="allowNavigation"
-                           <%= exam.isAllowNavigation() ? "checked" : "" %>>
-                    Allow navigation
-                </label>
-
-                <br>
-
-                <label>
-                    <input type="checkbox"
-                           name="shuffleQuestions"
-                           <%= exam.isShuffleQuestions() ? "checked" : "" %>>
-                    Shuffle questions
-                </label>
-
-                <br>
-
-                <label>
-                    <input type="checkbox"
-                           name="shuffleOptions"
-                           <%= exam.isShuffleOptions() ? "checked" : "" %>>
-                    Shuffle options
-                </label>
+                <a class="cancel"
+                   href="<%= contextPath %>/admin/exams">
+                    Cancel
+                </a>
 
             </div>
-
-            <button type="submit"
-                    class="btn btn-primary">
-                Update Exam
-            </button>
 
         </form>
 
     </div>
 
 </div>
-
-<script>
-function toggleRoom() {
-
-    const mode =
-        document.getElementById("examMode").value;
-
-    document.getElementById("roomName").required =
-        mode === "OFFLINE";
-}
-
-toggleRoom();
-</script>
 
 </body>
 </html>

@@ -1,6 +1,6 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 public class ExamQuestion {
 
@@ -10,14 +10,15 @@ public class ExamQuestion {
 
     private int questionOrder;
 
-    private BigDecimal marks;
-    private BigDecimal negativeMarks;
+    private double marks;
+    private double negativeMarks;
 
     private String sectionName;
 
     private boolean required;
 
-    // Optional joined question
+    private Timestamp createdAt;
+
     private Question question;
 
     public ExamQuestion() {
@@ -55,19 +56,19 @@ public class ExamQuestion {
         this.questionOrder = questionOrder;
     }
 
-    public BigDecimal getMarks() {
+    public double getMarks() {
         return marks;
     }
 
-    public void setMarks(BigDecimal marks) {
+    public void setMarks(double marks) {
         this.marks = marks;
     }
 
-    public BigDecimal getNegativeMarks() {
+    public double getNegativeMarks() {
         return negativeMarks;
     }
 
-    public void setNegativeMarks(BigDecimal negativeMarks) {
+    public void setNegativeMarks(double negativeMarks) {
         this.negativeMarks = negativeMarks;
     }
 
@@ -85,6 +86,14 @@ public class ExamQuestion {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Question getQuestion() {

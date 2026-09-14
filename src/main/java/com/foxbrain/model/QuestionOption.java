@@ -1,5 +1,7 @@
 package com.foxbrain.model;
 
+import java.sql.Timestamp;
+
 public class QuestionOption {
 
     private long id;
@@ -7,7 +9,10 @@ public class QuestionOption {
 
     private String optionText;
     private int optionOrder;
+
     private boolean correct;
+
+    private Timestamp createdAt;
 
     public QuestionOption() {
     }
@@ -50,5 +55,13 @@ public class QuestionOption {
 
     public void setCorrect(boolean correct) {
         this.correct = correct;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 }

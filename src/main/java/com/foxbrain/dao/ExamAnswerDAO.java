@@ -9,52 +9,63 @@ import java.util.List;
 
 public class ExamAnswerDAO {
 
-    public boolean saveOrUpdate(ExamAnswer answer)
+    public long saveOrUpdate(ExamAnswer answer)
             throws SQLException {
 
         String sql =
-                "INSERT INTO exam_answers (" +
-                "attempt_id, exam_question_id, selected_option_id, " +
-                "answer_text, answered_at" +
-                ") VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) " +
+                "INSERT INTO exam_answers " +
+                "(attempt_id, exam_question_id, selected_option_id, " +
+                "answer_text, answered_at) " +
+                "VALUES (?, ?, ?, ?, NOW()) " +
                 "ON DUPLICATE KEY UPDATE " +
-                "selected_option_id = VALUES(selected_option_id), " +
-                "answer_text = VALUES(answer_text), " +
-                "answered_at = CURRENT_TIMESTAMP";
+                "selected_option_id=VALUES(selected_option_id), " +
+                "answer_text=VALUES(answer_text), " +
+                "answered_at=NOW()";
 
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps =
+                     con.prepareStatement(sql,
+                             Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, answer.getAttemptId());
             ps.setLong(2, answer.getExamQuestionId());
 
-            if (answer.getSelectedOptionId() != null) {
-                ps.setLong(3, answer.getSelectedOptionId());
-            } else {
+            if (answer.getSelectedOptionId() != null)
+                ps.setLong(3,
+                        answer.getSelectedOptionId());
+            else
                 ps.setNull(3, Types.BIGINT);
-            }
 
             ps.setString(4, answer.getAnswerText());
 
-            return ps.executeUpdate() > 0;
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+
+                if (keys.next()) {
+                    return keys.getLong(1);
+                }
+            }
         }
+
+        return 0;
     }
 
-    public ExamAnswer getById(long id) throws SQLException {
+    public ExamAnswer getById(long id)
+            throws SQLException {
 
         String sql =
                 "SELECT ea.*, " +
-                "q.question_text, " +
-                "q.question_type, " +
+                "q.question_text, q.question_type, " +
                 "qo.option_text AS selected_option_text " +
                 "FROM exam_answers ea " +
                 "INNER JOIN exam_questions eq " +
-                "ON ea.exam_question_id = eq.id " +
+                "ON ea.exam_question_id=eq.id " +
                 "INNER JOIN question_bank q " +
-                "ON eq.question_id = q.id " +
+                "ON eq.question_id=q.id " +
                 "LEFT JOIN question_options qo " +
-                "ON ea.selected_option_id = qo.id " +
-                "WHERE ea.id = ?";
+                "ON ea.selected_option_id=qo.id " +
+                "WHERE ea.id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -73,24 +84,24 @@ public class ExamAnswerDAO {
     }
 
     public List<ExamAnswer> getByAttemptId(
-            long attemptId) throws SQLException {
-
-        List<ExamAnswer> answers = new ArrayList<>();
+            long attemptId)
+            throws SQLException {
 
         String sql =
                 "SELECT ea.*, " +
-                "q.question_text, " +
-                "q.question_type, " +
+                "q.question_text, q.question_type, " +
                 "qo.option_text AS selected_option_text " +
                 "FROM exam_answers ea " +
                 "INNER JOIN exam_questions eq " +
-                "ON ea.exam_question_id = eq.id " +
+                "ON ea.exam_question_id=eq.id " +
                 "INNER JOIN question_bank q " +
-                "ON eq.question_id = q.id " +
+                "ON eq.question_id=q.id " +
                 "LEFT JOIN question_options qo " +
-                "ON ea.selected_option_id = qo.id " +
-                "WHERE ea.attempt_id = ? " +
+                "ON ea.selected_option_id=qo.id " +
+                "WHERE ea.attempt_id=? " +
                 "ORDER BY eq.question_order ASC";
+
+        List<ExamAnswer> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -100,32 +111,32 @@ public class ExamAnswerDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    answers.add(mapRow(rs));
+                    list.add(mapRow(rs));
                 }
             }
         }
 
-        return answers;
+        return list;
     }
 
     public ExamAnswer getByAttemptAndQuestion(
             long attemptId,
-            long examQuestionId) throws SQLException {
+            long examQuestionId)
+            throws SQLException {
 
         String sql =
                 "SELECT ea.*, " +
-                "q.question_text, " +
-                "q.question_type, " +
+                "q.question_text, q.question_type, " +
                 "qo.option_text AS selected_option_text " +
                 "FROM exam_answers ea " +
                 "INNER JOIN exam_questions eq " +
-                "ON ea.exam_question_id = eq.id " +
+                "ON ea.exam_question_id=eq.id " +
                 "INNER JOIN question_bank q " +
-                "ON eq.question_id = q.id " +
+                "ON eq.question_id=q.id " +
                 "LEFT JOIN question_options qo " +
-                "ON ea.selected_option_id = qo.id " +
-                "WHERE ea.attempt_id = ? " +
-                "AND ea.exam_question_id = ?";
+                "ON ea.selected_option_id=qo.id " +
+                "WHERE ea.attempt_id=? " +
+                "AND ea.exam_question_id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -145,88 +156,83 @@ public class ExamAnswerDAO {
     }
 
     public boolean evaluate(
-            long answerId,
-            java.math.BigDecimal marksObtained,
-            Boolean correct,
-            String teacherRemarks)
+            long id,
+            double marksObtained,
+            boolean correct,
+            String remarks)
             throws SQLException {
 
         String sql =
                 "UPDATE exam_answers SET " +
-                "marks_obtained = ?, " +
-                "is_correct = ?, " +
-                "evaluated = TRUE, " +
-                "teacher_remarks = ?, " +
-                "evaluated_at = CURRENT_TIMESTAMP " +
-                "WHERE id = ?";
+                "marks_obtained=?, " +
+                "is_correct=?, " +
+                "evaluated=TRUE, " +
+                "teacher_remarks=?, " +
+                "evaluated_at=NOW() " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            if (marksObtained != null) {
-                ps.setBigDecimal(1, marksObtained);
-            } else {
-                ps.setNull(1, Types.DECIMAL);
-            }
-
-            if (correct != null) {
-                ps.setBoolean(2, correct);
-            } else {
-                ps.setNull(2, Types.BOOLEAN);
-            }
-
-            ps.setString(3, teacherRemarks);
-            ps.setLong(4, answerId);
+            ps.setDouble(1, marksObtained);
+            ps.setBoolean(2, correct);
+            ps.setString(3, remarks);
+            ps.setLong(4, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
     public boolean autoEvaluate(
-            long answerId,
-            java.math.BigDecimal marksObtained,
-            boolean correct)
+            long answerId)
             throws SQLException {
 
         String sql =
-                "UPDATE exam_answers SET " +
-                "marks_obtained = ?, " +
-                "is_correct = ?, " +
-                "evaluated = TRUE, " +
-                "evaluated_at = CURRENT_TIMESTAMP " +
-                "WHERE id = ?";
+                "UPDATE exam_answers ea " +
+                "INNER JOIN exam_questions eq " +
+                "ON ea.exam_question_id=eq.id " +
+                "INNER JOIN question_options qo " +
+                "ON ea.selected_option_id=qo.id " +
+                "SET " +
+                "ea.marks_obtained = " +
+                "CASE " +
+                "WHEN qo.is_correct=TRUE THEN eq.marks " +
+                "ELSE -eq.negative_marks " +
+                "END, " +
+                "ea.is_correct=qo.is_correct, " +
+                "ea.evaluated=TRUE, " +
+                "ea.evaluated_at=NOW() " +
+                "WHERE ea.id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setBigDecimal(1, marksObtained);
-            ps.setBoolean(2, correct);
-            ps.setLong(3, answerId);
+            ps.setLong(1, answerId);
 
             return ps.executeUpdate() > 0;
         }
     }
 
     public List<ExamAnswer> getUnevaluatedByAttemptId(
-            long attemptId) throws SQLException {
-
-        List<ExamAnswer> answers = new ArrayList<>();
+            long attemptId)
+            throws SQLException {
 
         String sql =
                 "SELECT ea.*, " +
-                "q.question_text, " +
-                "q.question_type, " +
+                "q.question_text, q.question_type, " +
                 "qo.option_text AS selected_option_text " +
                 "FROM exam_answers ea " +
                 "INNER JOIN exam_questions eq " +
-                "ON ea.exam_question_id = eq.id " +
+                "ON ea.exam_question_id=eq.id " +
                 "INNER JOIN question_bank q " +
-                "ON eq.question_id = q.id " +
+                "ON eq.question_id=q.id " +
                 "LEFT JOIN question_options qo " +
-                "ON ea.selected_option_id = qo.id " +
-                "WHERE ea.attempt_id = ? " +
-                "AND ea.evaluated = FALSE " +
+                "ON ea.selected_option_id=qo.id " +
+                "WHERE ea.attempt_id=? " +
+                "AND ea.evaluated=FALSE " +
                 "ORDER BY eq.question_order ASC";
+
+        List<ExamAnswer> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -236,81 +242,74 @@ public class ExamAnswerDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    answers.add(mapRow(rs));
+                    list.add(mapRow(rs));
                 }
             }
         }
 
-        return answers;
+        return list;
     }
 
     private ExamAnswer mapRow(ResultSet rs)
             throws SQLException {
 
-        ExamAnswer answer = new ExamAnswer();
+        ExamAnswer a = new ExamAnswer();
 
-        answer.setId(rs.getLong("id"));
-        answer.setAttemptId(rs.getLong("attempt_id"));
-        answer.setExamQuestionId(
-                rs.getLong("exam_question_id")
-        );
+        a.setId(rs.getLong("id"));
+        a.setAttemptId(
+                rs.getLong("attempt_id"));
 
-        long optionId = rs.getLong("selected_option_id");
+        a.setExamQuestionId(
+                rs.getLong("exam_question_id"));
 
-        if (!rs.wasNull()) {
-            answer.setSelectedOptionId(optionId);
-        }
+        long optionId =
+                rs.getLong("selected_option_id");
 
-        answer.setAnswerText(
-                rs.getString("answer_text")
-        );
+        if (rs.wasNull())
+            a.setSelectedOptionId(null);
+        else
+            a.setSelectedOptionId(optionId);
 
-        answer.setMarksObtained(
-                rs.getBigDecimal("marks_obtained")
-        );
+        a.setAnswerText(
+                rs.getString("answer_text"));
 
-        boolean correctValue = rs.getBoolean("is_correct");
+        double marks =
+                rs.getDouble("marks_obtained");
 
-        if (!rs.wasNull()) {
-            answer.setCorrect(correctValue);
-        }
+        if (rs.wasNull())
+            a.setMarksObtained(null);
+        else
+            a.setMarksObtained(marks);
 
-        answer.setEvaluated(
-                rs.getBoolean("evaluated")
-        );
+        boolean correct =
+                rs.getBoolean("is_correct");
 
-        answer.setTeacherRemarks(
-                rs.getString("teacher_remarks")
-        );
+        if (rs.wasNull())
+            a.setCorrect(null);
+        else
+            a.setCorrect(correct);
 
-        Timestamp answeredAt = rs.getTimestamp("answered_at");
+        a.setEvaluated(
+                rs.getBoolean("evaluated"));
 
-        if (answeredAt != null) {
-            answer.setAnsweredAt(
-                    answeredAt.toLocalDateTime()
-            );
-        }
+        a.setTeacherRemarks(
+                rs.getString("teacher_remarks"));
 
-        Timestamp evaluatedAt = rs.getTimestamp("evaluated_at");
+        a.setAnsweredAt(
+                rs.getTimestamp("answered_at"));
 
-        if (evaluatedAt != null) {
-            answer.setEvaluatedAt(
-                    evaluatedAt.toLocalDateTime()
-            );
-        }
+        a.setEvaluatedAt(
+                rs.getTimestamp("evaluated_at"));
 
-        answer.setQuestionText(
-                rs.getString("question_text")
-        );
+        a.setQuestionText(
+                rs.getString("question_text"));
 
-        answer.setQuestionType(
-                rs.getString("question_type")
-        );
+        a.setQuestionType(
+                rs.getString("question_type"));
 
-        answer.setSelectedOptionText(
-                rs.getString("selected_option_text")
-        );
+        a.setSelectedOptionText(
+                rs.getString("selected_option_text"));
 
-        return answer;
+        return a;
     }
 }

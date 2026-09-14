@@ -1,30 +1,26 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 
 public class Exam {
 
     private long id;
     private long batchId;
 
-    // Display fields from JOIN
-    private String batchName;
-    private String batchCode;
-
     private String title;
     private String examType;
     private String examMode;
 
-    private LocalDate examDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private Date examDate;
+    private Time startTime;
+    private Time endTime;
 
     private Integer durationMinutes;
 
-    private BigDecimal totalMarks;
-    private BigDecimal passingMarks;
+    private double totalMarks;
+    private Double passingMarks;
 
     private String roomName;
     private String instructions;
@@ -34,6 +30,12 @@ public class Exam {
     private boolean shuffleOptions;
 
     private String status;
+
+    private String batchName;
+    private String batchCode;
+
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public Exam() {
     }
@@ -52,22 +54,6 @@ public class Exam {
 
     public void setBatchId(long batchId) {
         this.batchId = batchId;
-    }
-
-    public String getBatchName() {
-        return batchName;
-    }
-
-    public void setBatchName(String batchName) {
-        this.batchName = batchName;
-    }
-
-    public String getBatchCode() {
-        return batchCode;
-    }
-
-    public void setBatchCode(String batchCode) {
-        this.batchCode = batchCode;
     }
 
     public String getTitle() {
@@ -94,27 +80,27 @@ public class Exam {
         this.examMode = examMode;
     }
 
-    public LocalDate getExamDate() {
+    public Date getExamDate() {
         return examDate;
     }
 
-    public void setExamDate(LocalDate examDate) {
+    public void setExamDate(Date examDate) {
         this.examDate = examDate;
     }
 
-    public LocalTime getStartTime() {
+    public Time getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalTime startTime) {
+    public void setStartTime(Time startTime) {
         this.startTime = startTime;
     }
 
-    public LocalTime getEndTime() {
+    public Time getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(LocalTime endTime) {
+    public void setEndTime(Time endTime) {
         this.endTime = endTime;
     }
 
@@ -126,19 +112,19 @@ public class Exam {
         this.durationMinutes = durationMinutes;
     }
 
-    public BigDecimal getTotalMarks() {
+    public double getTotalMarks() {
         return totalMarks;
     }
 
-    public void setTotalMarks(BigDecimal totalMarks) {
+    public void setTotalMarks(double totalMarks) {
         this.totalMarks = totalMarks;
     }
 
-    public BigDecimal getPassingMarks() {
+    public Double getPassingMarks() {
         return passingMarks;
     }
 
-    public void setPassingMarks(BigDecimal passingMarks) {
+    public void setPassingMarks(Double passingMarks) {
         this.passingMarks = passingMarks;
     }
 
@@ -188,5 +174,37 @@ public class Exam {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getBatchName() {
+        return batchName;
+    }
+
+    public void setBatchName(String batchName) {
+        this.batchName = batchName;
+    }
+
+    public String getBatchCode() {
+        return batchCode;
+    }
+
+    public void setBatchCode(String batchCode) {
+        this.batchCode = batchCode;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

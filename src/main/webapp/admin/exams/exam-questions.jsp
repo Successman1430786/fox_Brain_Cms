@@ -1,28 +1,88 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List" %>
+<%@ page import="com.foxbrain.model.Exam" %>
 <%@ page import="com.foxbrain.model.ExamQuestion" %>
+<%@ page import="com.foxbrain.model.Question" %>
 
 <%
-    Long examId =
-            (Long) request.getAttribute("examId");
+    String contextPath = request.getContextPath();
+
+    Exam exam =
+            (Exam) request.getAttribute("exam");
 
     List<ExamQuestion> examQuestions =
             (List<ExamQuestion>)
                     request.getAttribute("examQuestions");
 
-    String success =
-            request.getParameter("success");
+    List<Question> questions =
+            (List<Question>)
+                    request.getAttribute("questions");
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
-
+    <meta charset="UTF-8">
     <title>Exam Questions - FoxBrain</title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
+        .content {
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+        }
+
+        select, input {
+            padding: 9px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        .delete {
+            color: #dc2626;
+            text-decoration: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,41 +90,19 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <h1>
+        Questions:
+        <%= exam != null ? exam.getTitle() : "" %>
+    </h1>
 
-        <div>
+    <div class="box">
 
-            <h1>Exam Questions</h1>
-
-            <p>
-                Configure questions assigned to Exam #<%= examId %>.
-            </p>
-
-        </div>
-
-        <a href="<%= request.getContextPath() %>/admin/exams?action=view&id=<%= examId %>"
-           class="btn btn-secondary">
-            Back to Exam
-        </a>
-
-    </div>
-
-    <% if (success != null) { %>
-
-        <div class="alert alert-success">
-            Question operation: <%= success %>
-        </div>
-
-    <% } %>
-
-    <div class="card">
-
-        <h2>Add Question</h2>
+        <h3>Add Question</h3>
 
         <form method="post"
-              action="<%= request.getContextPath() %>/admin/exam-questions">
+              action="<%= contextPath %>/admin/exam-questions">
 
             <input type="hidden"
                    name="action"
@@ -72,86 +110,82 @@
 
             <input type="hidden"
                    name="examId"
-                   value="<%= examId %>">
+                   value="<%= exam.getId() %>">
 
-            <div class="form-grid">
+            <div class="grid">
 
-                <div class="form-group">
+                <div>
+                    <label>Question</label>
 
-                    <label>Question ID *</label>
+                    <select name="questionId"
+                            required>
 
-                    <input type="number"
-                           name="questionId"
-                           min="1"
-                           required>
+                        <option value="">
+                            Select Question
+                        </option>
 
-                    <small>
-                        Enter an existing Question Bank ID.
-                    </small>
+                        <% if (questions != null) {
 
+                            for (Question q : questions) {
+                        %>
+
+                        <option value="<%= q.getId() %>">
+
+                            <%= q.getId() %> -
+                            <%= q.getQuestionText() %>
+
+                        </option>
+
+                        <%
+                            }
+                        }
+                        %>
+
+                    </select>
                 </div>
 
-                <div class="form-group">
-
-                    <label>Question Order</label>
-
-                    <input type="number"
-                           name="questionOrder"
-                           min="1"
-                           placeholder="Auto">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Marks *</label>
+                <div>
+                    <label>Marks</label>
 
                     <input type="number"
                            name="marks"
-                           min="0.01"
                            step="0.01"
+                           min="0.01"
+                           value="1"
                            required>
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Negative Marks</label>
 
                     <input type="number"
                            name="negativeMarks"
-                           min="0"
                            step="0.01"
+                           min="0"
                            value="0">
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Section</label>
 
                     <input type="text"
-                           name="sectionName"
-                           maxlength="100"
-                           placeholder="e.g. Section A">
-
+                           name="sectionName">
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>
                         <input type="checkbox"
                                name="isRequired"
                                checked>
                         Required Question
                     </label>
-
                 </div>
 
             </div>
 
-            <button type="submit"
-                    class="btn btn-primary">
+            <br>
+
+            <button type="submit">
                 Add Question
             </button>
 
@@ -159,96 +193,93 @@
 
     </div>
 
-    <div class="card">
+    <div class="box">
 
-        <h2>Assigned Questions</h2>
+        <h3>Exam Question List</h3>
 
-        <table class="admin-table">
+        <table>
 
             <thead>
-
             <tr>
                 <th>Order</th>
                 <th>Question</th>
                 <th>Type</th>
                 <th>Marks</th>
                 <th>Negative</th>
-                <th>Section</th>
                 <th>Required</th>
-                <th>Actions</th>
+                <th>Action</th>
             </tr>
-
             </thead>
 
             <tbody>
 
-            <% if (examQuestions == null ||
-                   examQuestions.isEmpty()) { %>
+            <% if (examQuestions != null &&
+                   !examQuestions.isEmpty()) {
 
-                <tr>
-                    <td colspan="8"
-                        style="text-align:center;">
-                        No questions assigned yet.
-                    </td>
-                </tr>
+                for (ExamQuestion eq : examQuestions) {
+            %>
 
-            <% } else { %>
+            <tr>
 
-                <% for (ExamQuestion eq : examQuestions) { %>
+                <td>
+                    <%= eq.getQuestionOrder() %>
+                </td>
 
-                    <tr>
+                <td>
 
-                        <td>
-                            <%= eq.getQuestionOrder() %>
-                        </td>
+                    <%
+                        Question q = eq.getQuestion();
+                    %>
 
-                        <td>
+                    <%= q != null
+                            ? q.getQuestionText()
+                            : eq.getQuestionId() %>
 
-                            <%= eq.getQuestion() == null
-                                    ? "Question #" + eq.getQuestionId()
-                                    : eq.getQuestion().getQuestionText() %>
+                </td>
 
-                        </td>
+                <td>
+                    <%= q != null
+                            ? q.getQuestionType()
+                            : "-" %>
+                </td>
 
-                        <td>
+                <td>
+                    <%= eq.getMarks() %>
+                </td>
 
-                            <%= eq.getQuestion() == null
-                                    ? "-"
-                                    : eq.getQuestion().getQuestionType() %>
+                <td>
+                    <%= eq.getNegativeMarks() %>
+                </td>
 
-                        </td>
+                <td>
+                    <%= eq.isRequired()
+                            ? "Yes"
+                            : "No" %>
+                </td>
 
-                        <td>
-                            <%= eq.getMarks() %>
-                        </td>
+                <td>
 
-                        <td>
-                            <%= eq.getNegativeMarks() %>
-                        </td>
+                    <a class="delete"
+                       href="<%= contextPath %>/admin/exam-questions?action=delete&id=<%= eq.getId() %>&examId=<%= exam.getId() %>"
+                       onclick="return confirm('Remove this question?');">
+                        Remove
+                    </a>
 
-                        <td>
-                            <%= eq.getSectionName() == null
-                                    ? "-"
-                                    : eq.getSectionName() %>
-                        </td>
+                </td>
 
-                        <td>
-                            <%= eq.isRequired() ? "YES" : "NO" %>
-                        </td>
+            </tr>
 
-                        <td>
+            <%
+                }
 
-                            <a href="<%= request.getContextPath() %>/admin/exam-questions?action=remove&id=<%= eq.getId() %>&examId=<%= examId %>"
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('Remove this question from the exam?');">
-                                Remove
-                            </a>
+            } else {
+            %>
 
-                        </td>
-
-                    </tr>
-
-                <% } %>
+            <tr>
+                <td colspan="7">
+                    No questions added yet.
+                </td>
+            </tr>
 
             <% } %>
 

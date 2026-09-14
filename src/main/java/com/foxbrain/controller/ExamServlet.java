@@ -1,9 +1,7 @@
 package com.foxbrain.controller;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
+import com.foxbrain.model.Exam;
+import com.foxbrain.service.ExamService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,8 +9,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.foxbrain.model.Exam;
-import com.foxbrain.service.ExamService;
+import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/admin/exams")
 public class ExamServlet extends HttpServlet {
@@ -22,7 +20,7 @@ public class ExamServlet extends HttpServlet {
     private ExamService examService;
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         examService = new ExamService();
     }
 
@@ -34,32 +32,36 @@ public class ExamServlet extends HttpServlet {
 
         String action = request.getParameter("action");
 
-        if (action == null || action.trim().isEmpty()) {
-            action = "list";
-        }
+        try {
 
-        switch (action) {
-
-            case "list":
-                listExams(request, response);
-                break;
-
-            case "view":
+            if ("view".equalsIgnoreCase(action)) {
                 viewExam(request, response);
-                break;
 
-            case "edit":
+            } else if ("edit".equalsIgnoreCase(action)) {
                 editExam(request, response);
-                break;
 
-            case "delete":
+            } else if ("delete".equalsIgnoreCase(action)) {
                 deleteExam(request, response);
-                break;
 
-            default:
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/exams?action=list");
+            } else if ("questions".equalsIgnoreCase(action)) {
+                questions(request, response);
+
+            } else {
+                listExams(request, response);
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            request.getRequestDispatcher(
+                    "/admin/exams/index.jsp"
+            ).forward(request, response);
         }
     }
 
@@ -69,215 +71,231 @@ public class ExamServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
+
         String action = request.getParameter("action");
 
-        if ("create".equalsIgnoreCase(action)) {
+        try {
 
-            createExam(request, response);
+            if ("create".equalsIgnoreCase(action)) {
+                createExam(request, response);
 
-        } else if ("update".equalsIgnoreCase(action)) {
+            } else if ("update".equalsIgnoreCase(action)) {
+                updateExam(request, response);
 
-            updateExam(request, response);
+            } else {
+                response.sendRedirect(
+                        request.getContextPath()
+                                + "/admin/exams"
+                );
+            }
 
-        } else {
+        } catch (Exception e) {
 
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/exams?action=list");
+            e.printStackTrace();
+
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            request.getRequestDispatcher(
+                    "/admin/exams/index.jsp"
+            ).forward(request, response);
         }
     }
+
+    // =====================================================
+    // LIST
+    // =====================================================
 
     private void listExams(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        List<Exam> exams =
+                examService.getAllExams();
+
         request.setAttribute(
                 "exams",
-                examService.getAllExams());
+                exams
+        );
 
         request.getRequestDispatcher(
-                "/admin/exams/index.jsp")
-                .forward(request, response);
+                "/admin/exams/index.jsp"
+        ).forward(request, response);
     }
+
+    // =====================================================
+    // VIEW
+    // =====================================================
 
     private void viewExam(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long id = parseLong(request.getParameter("id"));
+        long id = parseId(
+                request.getParameter("id")
+        );
 
-        if (id == null) {
-            redirectWithError(request, response,
-                    "Invalid exam ID.");
-            return;
-        }
-
-        Exam exam = examService.getExamById(id);
+        Exam exam =
+                examService.getExamById(id);
 
         if (exam == null) {
-            redirectWithError(request, response,
-                    "Exam not found.");
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Exam not found."
+            );
             return;
         }
 
-        request.setAttribute("exam", exam);
+        request.setAttribute(
+                "exam",
+                exam
+        );
 
         request.getRequestDispatcher(
-                "/admin/exams/view.jsp")
-                .forward(request, response);
+                "/admin/exams/view.jsp"
+        ).forward(request, response);
     }
+
+    // =====================================================
+    // EDIT
+    // =====================================================
 
     private void editExam(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long id = parseLong(request.getParameter("id"));
+        long id = parseId(
+                request.getParameter("id")
+        );
 
-        if (id == null) {
-            redirectWithError(request, response,
-                    "Invalid exam ID.");
-            return;
-        }
-
-        Exam exam = examService.getExamById(id);
+        Exam exam =
+                examService.getExamById(id);
 
         if (exam == null) {
-            redirectWithError(request, response,
-                    "Exam not found.");
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Exam not found."
+            );
             return;
         }
 
-        request.setAttribute("exam", exam);
+        request.setAttribute(
+                "exam",
+                exam
+        );
 
         request.getRequestDispatcher(
-                "/admin/exams/edit.jsp")
-                .forward(request, response);
+                "/admin/exams/edit.jsp"
+        ).forward(request, response);
     }
+
+    // =====================================================
+    // CREATE
+    // =====================================================
 
     private void createExam(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        try {
+        Exam exam =
+                buildExamFromRequest(request);
 
-            Exam exam = buildExamFromRequest(request);
+        long id =
+                examService.createExam(exam);
 
-            boolean success =
-                    examService.createExam(exam);
-
-            if (success) {
-
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/exams?action=list&success=created");
-
-            } else {
-
-                redirectWithError(
-                        request,
-                        response,
-                        "Unable to create exam. Please check the entered data.");
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectWithError(
-                    request,
-                    response,
-                    "Invalid exam information.");
-        }
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/exams?action=view&id="
+                        + id
+        );
     }
+
+    // =====================================================
+    // UPDATE
+    // =====================================================
 
     private void updateExam(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        try {
+        long id = parseId(
+                request.getParameter("id")
+        );
 
-            Long id =
-                    parseLong(request.getParameter("id"));
+        Exam exam =
+                buildExamFromRequest(request);
 
-            if (id == null) {
-                redirectWithError(
-                        request,
-                        response,
-                        "Invalid exam ID.");
-                return;
-            }
+        exam.setId(id);
 
-            Exam exam =
-                    buildExamFromRequest(request);
+        examService.updateExam(exam);
 
-            exam.setId(id);
-
-            boolean success =
-                    examService.updateExam(exam);
-
-            if (success) {
-
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/exams?action=list&success=updated");
-
-            } else {
-
-                redirectWithError(
-                        request,
-                        response,
-                        "Unable to update exam.");
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectWithError(
-                    request,
-                    response,
-                    "Invalid exam information.");
-        }
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/exams?action=view&id="
+                        + id
+        );
     }
+
+    // =====================================================
+    // DELETE
+    // =====================================================
 
     private void deleteExam(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        Long id =
-                parseLong(request.getParameter("id"));
+        long id = parseId(
+                request.getParameter("id")
+        );
 
-        if (id == null) {
-            redirectWithError(
-                    request,
-                    response,
-                    "Invalid exam ID.");
-            return;
-        }
+        examService.deleteExam(id);
 
-        boolean success =
-                examService.deleteExam(id);
-
-        if (success) {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/exams?action=list&success=deleted");
-
-        } else {
-
-            redirectWithError(
-                    request,
-                    response,
-                    "Unable to delete exam.");
-        }
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/exams"
+        );
     }
+
+    // =====================================================
+    // QUESTIONS
+    // =====================================================
+
+    private void questions(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        long id = parseId(
+                request.getParameter("id")
+        );
+
+        Exam exam =
+                examService.getExamById(id);
+
+        request.setAttribute(
+                "exam",
+                exam
+        );
+
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/exam-questions?examId="
+                        + id
+        );
+    }
+
+    // =====================================================
+    // BUILD EXAM
+    // =====================================================
 
     private Exam buildExamFromRequest(
             HttpServletRequest request) {
@@ -285,126 +303,178 @@ public class ExamServlet extends HttpServlet {
         Exam exam = new Exam();
 
         exam.setBatchId(
-                parseLongValue(
-                        request.getParameter("batchId")));
+                parseLong(
+                        request.getParameter("batchId")
+                )
+        );
 
         exam.setTitle(
-                trim(request.getParameter("title")));
+                request.getParameter("title")
+        );
 
         exam.setExamType(
-                trim(request.getParameter("examType")));
+                request.getParameter("examType")
+        );
 
         exam.setExamMode(
-                trim(request.getParameter("examMode")));
+                request.getParameter("examMode")
+        );
 
         String examDate =
-                trim(request.getParameter("examDate"));
+                request.getParameter("examDate");
 
-        if (!examDate.isEmpty()) {
+        if (examDate != null &&
+                !examDate.trim().isEmpty()) {
+
             exam.setExamDate(
-                    Date.valueOf(examDate));
+                    java.sql.Date.valueOf(examDate)
+            );
         }
 
         String startTime =
-                trim(request.getParameter("startTime"));
+                request.getParameter("startTime");
 
-        if (!startTime.isEmpty()) {
+        if (startTime != null &&
+                !startTime.trim().isEmpty()) {
+
             exam.setStartTime(
-                    Time.valueOf(startTime));
+                    java.sql.Time.valueOf(
+                            startTime.length() == 5
+                                    ? startTime + ":00"
+                                    : startTime
+                    )
+            );
         }
 
         String endTime =
-                trim(request.getParameter("endTime"));
+                request.getParameter("endTime");
 
-        if (!endTime.isEmpty()) {
+        if (endTime != null &&
+                !endTime.trim().isEmpty()) {
+
             exam.setEndTime(
-                    Time.valueOf(endTime));
+                    java.sql.Time.valueOf(
+                            endTime.length() == 5
+                                    ? endTime + ":00"
+                                    : endTime
+                    )
+            );
         }
 
         String duration =
-                trim(request.getParameter("durationMinutes"));
+                request.getParameter(
+                        "durationMinutes"
+                );
 
-        if (!duration.isEmpty()) {
+        if (duration != null &&
+                !duration.trim().isEmpty()) {
+
             exam.setDurationMinutes(
-                    Integer.parseInt(duration));
+                    Integer.parseInt(duration)
+            );
         }
 
         String totalMarks =
-                trim(request.getParameter("totalMarks"));
+                request.getParameter(
+                        "totalMarks"
+                );
 
-        if (!totalMarks.isEmpty()) {
+        if (totalMarks != null &&
+                !totalMarks.trim().isEmpty()) {
+
             exam.setTotalMarks(
-                    new BigDecimal(totalMarks));
+                    Double.parseDouble(totalMarks)
+            );
         }
 
         String passingMarks =
-                trim(request.getParameter("passingMarks"));
+                request.getParameter(
+                        "passingMarks"
+                );
 
-        if (!passingMarks.isEmpty()) {
+        if (passingMarks != null &&
+                !passingMarks.trim().isEmpty()) {
+
             exam.setPassingMarks(
-                    new BigDecimal(passingMarks));
+                    Double.parseDouble(passingMarks)
+            );
         }
 
         exam.setRoomName(
-                trim(request.getParameter("roomName")));
+                request.getParameter("roomName")
+        );
 
         exam.setInstructions(
-                trim(request.getParameter("instructions")));
+                request.getParameter("instructions")
+        );
 
         exam.setAllowNavigation(
-                request.getParameter("allowNavigation") != null);
+                request.getParameter(
+                        "allowNavigation"
+                ) != null
+        );
 
         exam.setShuffleQuestions(
-                request.getParameter("shuffleQuestions") != null);
+                request.getParameter(
+                        "shuffleQuestions"
+                ) != null
+        );
 
         exam.setShuffleOptions(
-                request.getParameter("shuffleOptions") != null);
+                request.getParameter(
+                        "shuffleOptions"
+                ) != null
+        );
 
-        exam.setStatus(
-                trim(request.getParameter("status")));
+        String status =
+                request.getParameter("status");
+
+        if (status == null ||
+                status.trim().isEmpty()) {
+
+            status = "DRAFT";
+        }
+
+        exam.setStatus(status);
 
         return exam;
     }
 
-    private Long parseLong(String value) {
+    // =====================================================
+    // ID PARSING
+    // =====================================================
+
+    private long parseId(String value) {
+
+        if (value == null ||
+                value.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "ID is required."
+            );
+        }
 
         try {
+            long id = Long.parseLong(value);
 
-            if (value == null || value.trim().isEmpty()) {
-                return null;
+            if (id <= 0) {
+                throw new IllegalArgumentException(
+                        "Invalid ID."
+                );
             }
 
-            return Long.parseLong(value.trim());
+            return id;
 
         } catch (NumberFormatException e) {
 
-            return null;
+            throw new IllegalArgumentException(
+                    "Invalid ID."
+            );
         }
     }
 
-    private long parseLongValue(String value) {
+    private long parseLong(String value) {
 
-        Long parsed = parseLong(value);
-
-        return parsed == null ? 0L : parsed;
-    }
-
-    private String trim(String value) {
-
-        return value == null ? "" : value.trim();
-    }
-
-    private void redirectWithError(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String message)
-            throws IOException {
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/exams?action=list&error="
-                + java.net.URLEncoder.encode(
-                        message,
-                        java.nio.charset.StandardCharsets.UTF_8));
+        return parseId(value);
     }
 }

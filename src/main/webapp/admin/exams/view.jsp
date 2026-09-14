@@ -2,11 +2,14 @@
 <%@ page import="com.foxbrain.model.Exam" %>
 
 <%
-    Exam exam = (Exam) request.getAttribute("exam");
+    String contextPath = request.getContextPath();
+
+    Exam exam =
+            (Exam) request.getAttribute("exam");
 
     if (exam == null) {
         response.sendRedirect(
-            request.getContextPath() + "/admin/exams?action=list"
+                contextPath + "/admin/exams"
         );
         return;
     }
@@ -15,12 +18,62 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <title>View Exam - FoxBrain</title>
 
-    <title><%= exam.getTitle() %> - FoxBrain</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+        .content {
+            padding: 30px;
+        }
 
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 1000px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .item {
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .label {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .value {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .actions {
+            margin-top: 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+    </style>
 </head>
 
 <body>
@@ -28,139 +81,140 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <h1><%= exam.getTitle() %></h1>
 
-        <div>
-            <h1><%= exam.getTitle() %></h1>
-            <p>Exam details and management.</p>
+    <div class="card">
+
+        <div class="grid">
+
+            <div class="item">
+                <div class="label">Exam ID</div>
+                <div class="value"><%= exam.getId() %></div>
+            </div>
+
+            <div class="item">
+                <div class="label">Batch</div>
+                <div class="value">
+                    <%= exam.getBatchName() != null
+                            ? exam.getBatchName()
+                            : exam.getBatchId() %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Type</div>
+                <div class="value">
+                    <%= exam.getExamType() %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Mode</div>
+                <div class="value">
+                    <%= exam.getExamMode() %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Date</div>
+                <div class="value">
+                    <%= exam.getExamDate() != null
+                            ? exam.getExamDate()
+                            : "-" %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Time</div>
+                <div class="value">
+                    <%= exam.getStartTime() != null
+                            ? exam.getStartTime()
+                            : "-" %>
+                    -
+                    <%= exam.getEndTime() != null
+                            ? exam.getEndTime()
+                            : "-" %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Duration</div>
+                <div class="value">
+                    <%= exam.getDurationMinutes() %> minutes
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Room</div>
+                <div class="value">
+                    <%= exam.getRoomName() != null
+                            ? exam.getRoomName()
+                            : "-" %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Total Marks</div>
+                <div class="value">
+                    <%= exam.getTotalMarks() %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Passing Marks</div>
+                <div class="value">
+                    <%= exam.getPassingMarks() %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Status</div>
+                <div class="value">
+                    <%= exam.getStatus() %>
+                </div>
+            </div>
+
+            <div class="item">
+                <div class="label">Navigation</div>
+                <div class="value">
+                    <%= exam.isAllowNavigation()
+                            ? "Allowed"
+                            : "Not Allowed" %>
+                </div>
+            </div>
+
         </div>
 
-        <div>
+        <hr>
 
-            <a href="<%= request.getContextPath() %>/admin/exams?action=edit&id=<%= exam.getId() %>"
-               class="btn btn-primary">
-                Edit
-            </a>
-
-            <a href="<%= request.getContextPath() %>/admin/exams?action=list"
-               class="btn btn-secondary">
-                Back
-            </a>
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h2>Exam Information</h2>
-
-        <table class="admin-table">
-
-            <tr>
-                <th>ID</th>
-                <td><%= exam.getId() %></td>
-            </tr>
-
-            <tr>
-                <th>Batch</th>
-                <td><%= exam.getBatchId() %></td>
-            </tr>
-
-            <tr>
-                <th>Type</th>
-                <td><%= exam.getExamType() %></td>
-            </tr>
-
-            <tr>
-                <th>Mode</th>
-                <td><%= exam.getExamMode() %></td>
-            </tr>
-
-            <tr>
-                <th>Date</th>
-                <td><%= exam.getExamDate() == null ? "-" : exam.getExamDate() %></td>
-            </tr>
-
-            <tr>
-                <th>Start</th>
-                <td><%= exam.getStartTime() == null ? "-" : exam.getStartTime() %></td>
-            </tr>
-
-            <tr>
-                <th>End</th>
-                <td><%= exam.getEndTime() == null ? "-" : exam.getEndTime() %></td>
-            </tr>
-
-            <tr>
-                <th>Duration</th>
-                <td>
-                    <%= exam.getDurationMinutes() == null
-                            ? "-"
-                            : exam.getDurationMinutes() + " minutes" %>
-                </td>
-            </tr>
-
-            <tr>
-                <th>Total Marks</th>
-                <td><%= exam.getTotalMarks() %></td>
-            </tr>
-
-            <tr>
-                <th>Passing Marks</th>
-                <td>
-                    <%= exam.getPassingMarks() == null
-                            ? "-"
-                            : exam.getPassingMarks() %>
-                </td>
-            </tr>
-
-            <tr>
-                <th>Room</th>
-                <td>
-                    <%= exam.getRoomName() == null
-                            ? "-"
-                            : exam.getRoomName() %>
-                </td>
-            </tr>
-
-            <tr>
-                <th>Status</th>
-                <td><%= exam.getStatus() %></td>
-            </tr>
-
-        </table>
-
-    </div>
-
-    <div class="card">
-
-        <h2>Exam Management</h2>
-
-        <a href="<%= request.getContextPath() %>/admin/exam-questions?action=list&examId=<%= exam.getId() %>"
-           class="btn btn-primary">
-            Manage Questions
-        </a>
-
-        <a href="<%= request.getContextPath() %>/admin/exam-results?action=list&examId=<%= exam.getId() %>"
-           class="btn btn-secondary">
-            View Results
-        </a>
-
-    </div>
-
-    <div class="card">
-
-        <h2>Instructions</h2>
+        <h3>Instructions</h3>
 
         <p>
-            <%= exam.getInstructions() == null ||
-                exam.getInstructions().isEmpty()
-                ? "No instructions provided."
-                : exam.getInstructions() %>
+            <%= exam.getInstructions() != null
+                    ? exam.getInstructions()
+                    : "No instructions." %>
         </p>
+
+        <div class="actions">
+
+            <a class="btn"
+               href="<%= contextPath %>/admin/exams?action=edit&id=<%= exam.getId() %>">
+                Edit Exam
+            </a>
+
+            <a class="btn"
+               href="<%= contextPath %>/admin/exam-questions?examId=<%= exam.getId() %>">
+                Manage Questions
+            </a>
+
+            <a class="btn"
+               href="<%= contextPath %>/admin/exam-results?examId=<%= exam.getId() %>">
+                View Results
+            </a>
+
+        </div>
 
     </div>
 

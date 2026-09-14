@@ -1,30 +1,29 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class ExamResult {
 
     private long id;
+
     private long examId;
     private long studentId;
 
-    // Display fields from JOIN
-    private String examTitle;
-    private String studentName;
-    private String admissionNumber;
-
-    private BigDecimal marksObtained;
+    private double marksObtained;
 
     private String grade;
     private String resultStatus;
-
     private String remarks;
 
-    private LocalDateTime publishedAt;
+    private Timestamp publishedAt;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+
+    private String examTitle;
+
+    private String studentName;
+    private String admissionNumber;
 
     public ExamResult() {
     }
@@ -53,35 +52,11 @@ public class ExamResult {
         this.studentId = studentId;
     }
 
-    public String getExamTitle() {
-        return examTitle;
-    }
-
-    public void setExamTitle(String examTitle) {
-        this.examTitle = examTitle;
-    }
-
-    public String getStudentName() {
-        return studentName;
-    }
-
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
-    public String getAdmissionNumber() {
-        return admissionNumber;
-    }
-
-    public void setAdmissionNumber(String admissionNumber) {
-        this.admissionNumber = admissionNumber;
-    }
-
-    public BigDecimal getMarksObtained() {
+    public double getMarksObtained() {
         return marksObtained;
     }
 
-    public void setMarksObtained(BigDecimal marksObtained) {
+    public void setMarksObtained(double marksObtained) {
         this.marksObtained = marksObtained;
     }
 
@@ -109,27 +84,51 @@ public class ExamResult {
         this.remarks = remarks;
     }
 
-    public LocalDateTime getPublishedAt() {
+    public Timestamp getPublishedAt() {
         return publishedAt;
     }
 
-    public void setPublishedAt(LocalDateTime publishedAt) {
+    public void setPublishedAt(Timestamp publishedAt) {
         this.publishedAt = publishedAt;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Timestamp getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Timestamp getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getExamTitle() {
+        return examTitle;
+    }
+
+    public void setExamTitle(String examTitle) {
+        this.examTitle = examTitle;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getAdmissionNumber() {
+        return admissionNumber;
+    }
+
+    public void setAdmissionNumber(String admissionNumber) {
+        this.admissionNumber = admissionNumber;
     }
 }

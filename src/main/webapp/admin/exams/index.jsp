@@ -1,422 +1,292 @@
-package com.foxbrain.controller;
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.util.List" %>
+<%@ page import="com.foxbrain.model.Exam" %>
 
-import java.io.IOException;
-import java.math.BigDecimal;
+<%
+    String contextPath = request.getContextPath();
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+    List<Exam> exams =
+            (List<Exam>) request.getAttribute("exams");
 
-import com.foxbrain.model.ExamResult;
-import com.foxbrain.service.ExamResultService;
+    String error =
+            (String) request.getAttribute("error");
+%>
 
-@WebServlet("/admin/exam-results")
-public class ExamResultServlet extends HttpServlet {
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Exams - FoxBrain</title>
 
-    private static final long serialVersionUID = 1L;
-
-    private ExamResultService resultService;
-
-    @Override
-    public void init() throws ServletException {
-        resultService =
-                new ExamResultService();
-    }
-
-    @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String action =
-                request.getParameter("action");
-
-        if (action == null ||
-            action.trim().isEmpty()) {
-
-            action = "list";
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            margin: 0;
         }
 
-        switch (action) {
-
-            case "list":
-                list(request, response);
-                break;
-
-            case "view":
-                view(request, response);
-                break;
-
-            case "publish":
-                publish(request, response);
-                break;
-
-            case "unpublish":
-                unpublish(request, response);
-                break;
-
-            default:
-                list(request, response);
-        }
-    }
-
-    @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String action =
-                request.getParameter("action");
-
-        if ("create".equalsIgnoreCase(action)) {
-
-            create(request, response);
-
-        } else if ("createFromAttempt"
-                .equalsIgnoreCase(action)) {
-
-            createFromAttempt(request, response);
-
-        } else if ("update".equalsIgnoreCase(action)) {
-
-            update(request, response);
-
-        } else {
-
-            list(request, response);
-        }
-    }
-
-    private void list(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String examId =
-                request.getParameter("examId");
-
-        if (examId != null &&
-            !examId.trim().isEmpty()) {
-
-            try {
-
-                long id =
-                        Long.parseLong(
-                                examId);
-
-                request.setAttribute(
-                        "results",
-                        resultService.getResultsByExam(
-                                id));
-
-            } catch (NumberFormatException e) {
-
-                request.setAttribute(
-                        "results",
-                        resultService.getAllResults());
-            }
-
-        } else {
-
-            request.setAttribute(
-                    "results",
-                    resultService.getAllResults());
+        .content {
+            padding: 30px;
         }
 
-        request.getRequestDispatcher(
-                "/admin/exams/results.jsp")
-                .forward(request, response);
-    }
-
-    private void view(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long id =
-                parseLong(
-                        request.getParameter("id"));
-
-        if (id == null) {
-            redirectList(request, response);
-            return;
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
         }
 
-        ExamResult result =
-                resultService.getResultById(id);
-
-        if (result == null) {
-            redirectList(request, response);
-            return;
+        h1 {
+            margin: 0;
         }
 
-        request.setAttribute(
-                "result",
-                result);
-
-        request.getRequestDispatcher(
-                "/admin/exams/result-view.jsp")
-                .forward(request, response);
-    }
-
-    private void create(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        try {
-
-            ExamResult result =
-                    buildResult(request);
-
-            boolean success =
-                    resultService.createResult(
-                            result);
-
-            redirectResult(
-                    request,
-                    response,
-                    result.getExamId(),
-                    success ? "created" : "false");
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to create result.");
-        }
-    }
-
-    private void createFromAttempt(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        try {
-
-            long attemptId =
-                    Long.parseLong(
-                            request.getParameter(
-                                    "attemptId"));
-
-            boolean success =
-                    resultService.createResultFromAttempt(
-                            attemptId);
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/exam-results?action=list&success="
-                    + (success ? "created" : "false"));
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to generate result.");
-        }
-    }
-
-    private void update(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        try {
-
-            long id =
-                    Long.parseLong(
-                            request.getParameter(
-                                    "id"));
-
-            ExamResult result =
-                    buildResult(request);
-
-            result.setId(id);
-
-            boolean success =
-                    resultService.updateResult(
-                            result);
-
-            redirectResult(
-                    request,
-                    response,
-                    result.getExamId(),
-                    success ? "updated" : "false");
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to update result.");
-        }
-    }
-
-    private void publish(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        Long id =
-                parseLong(
-                        request.getParameter(
-                                "id"));
-
-        if (id == null) {
-            redirectList(request, response);
-            return;
+        .btn {
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
         }
 
-        boolean success =
-                resultService.publishResult(id);
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/exam-results?action=list&success="
-                + (success ? "published" : "false"));
-    }
-
-    private void unpublish(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        Long id =
-                parseLong(
-                        request.getParameter(
-                                "id"));
-
-        if (id == null) {
-            redirectList(request, response);
-            return;
+        .table-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
         }
 
-        boolean success =
-                resultService.unpublishResult(id);
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/exam-results?action=list&success="
-                + (success ? "unpublished" : "false"));
-    }
-
-    private ExamResult buildResult(
-            HttpServletRequest request) {
-
-        ExamResult result =
-                new ExamResult();
-
-        result.setExamId(
-                Long.parseLong(
-                        request.getParameter(
-                                "examId")));
-
-        result.setStudentId(
-                Long.parseLong(
-                        request.getParameter(
-                                "studentId")));
-
-        String marks =
-                request.getParameter(
-                        "marksObtained");
-
-        if (marks != null &&
-            !marks.trim().isEmpty()) {
-
-            result.setMarksObtained(
-                    new BigDecimal(marks));
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        result.setGrade(
-                trim(
-                        request.getParameter(
-                                "grade")));
-
-        result.setResultStatus(
-                trim(
-                        request.getParameter(
-                                "resultStatus")));
-
-        result.setRemarks(
-                trim(
-                        request.getParameter(
-                                "remarks")));
-
-        return result;
-    }
-
-    private Long parseLong(String value) {
-
-        try {
-
-            if (value == null ||
-                value.trim().isEmpty()) {
-
-                return null;
-            }
-
-            return Long.parseLong(
-                    value.trim());
-
-        } catch (NumberFormatException e) {
-
-            return null;
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
         }
-    }
 
-    private String trim(String value) {
+        th {
+            background: #f1f5f9;
+        }
 
-        return value == null ? "" : value.trim();
-    }
+        .badge {
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
 
-    private void redirectList(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
+        .online {
+            background: #dcfce7;
+            color: #166534;
+        }
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/exam-results?action=list");
-    }
+        .offline {
+            background: #dbeafe;
+            color: #1e40af;
+        }
 
-    private void redirectResult(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            long examId,
-            String result)
-            throws IOException {
+        .draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/exam-results?action=list&examId="
-                + examId
-                + "&success="
-                + result);
-    }
+        .scheduled {
+            background: #dcfce7;
+            color: #166534;
+        }
 
-    private void redirectError(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String message)
-            throws IOException {
+        .completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
 
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/exam-results?action=list&error="
-                + java.net.URLEncoder.encode(
-                        message,
-                        java.nio.charset.StandardCharsets.UTF_8));
-    }
-}
+        .cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .actions a {
+            margin-right: 8px;
+            text-decoration: none;
+        }
+
+        .danger {
+            color: #dc2626;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+
+<%@ include file="/includes/admin-header.jsp" %>
+
+<div class="content">
+
+    <div class="topbar">
+        <div>
+            <h1>Exams</h1>
+            <p>Manage online and offline examinations.</p>
+        </div>
+
+        <a class="btn"
+           href="<%= contextPath %>/admin/exams/add.jsp">
+            + Create Exam
+        </a>
+    </div>
+
+    <% if (error != null) { %>
+        <div class="error">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <div class="table-box">
+
+        <table>
+
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Mode</th>
+                <th>Date</th>
+                <th>Total Marks</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <% if (exams != null && !exams.isEmpty()) {
+
+                for (Exam exam : exams) {
+            %>
+
+            <tr>
+
+                <td><%= exam.getId() %></td>
+
+                <td>
+                    <strong>
+                        <%= exam.getTitle() %>
+                    </strong>
+                </td>
+
+                <td>
+                    <%= exam.getExamType() %>
+                </td>
+
+                <td>
+
+                    <% if ("ONLINE".equalsIgnoreCase(
+                            exam.getExamMode())) { %>
+
+                        <span class="badge online">
+                            ONLINE
+                        </span>
+
+                    <% } else { %>
+
+                        <span class="badge offline">
+                            OFFLINE
+                        </span>
+
+                    <% } %>
+
+                </td>
+
+                <td>
+                    <%= exam.getExamDate() != null
+                            ? exam.getExamDate()
+                            : "-" %>
+                </td>
+
+                <td>
+                    <%= exam.getTotalMarks() %>
+                </td>
+
+                <td>
+
+                    <%
+                        String status = exam.getStatus();
+
+                        String css = "draft";
+
+                        if ("SCHEDULED".equalsIgnoreCase(status))
+                            css = "scheduled";
+                        else if ("COMPLETED".equalsIgnoreCase(status))
+                            css = "completed";
+                        else if ("CANCELLED".equalsIgnoreCase(status))
+                            css = "cancelled";
+                    %>
+
+                    <span class="badge <%= css %>">
+                        <%= status %>
+                    </span>
+
+                </td>
+
+                <td class="actions">
+
+                    <a href="<%= contextPath %>/admin/exams?action=view&id=<%= exam.getId() %>">
+                        View
+                    </a>
+
+                    <a href="<%= contextPath %>/admin/exams?action=edit&id=<%= exam.getId() %>">
+                        Edit
+                    </a>
+
+                    <a href="<%= contextPath %>/admin/exam-questions?examId=<%= exam.getId() %>">
+                        Questions
+                    </a>
+
+                    <a href="<%= contextPath %>/admin/exam-results?examId=<%= exam.getId() %>">
+                        Results
+                    </a>
+
+                    <a class="danger"
+                       href="<%= contextPath %>/admin/exams?action=delete&id=<%= exam.getId() %>"
+                       onclick="return confirm('Delete this exam?');">
+                        Delete
+                    </a>
+
+                </td>
+
+            </tr>
+
+            <%
+                }
+
+            } else {
+            %>
+
+            <tr>
+                <td colspan="8">
+                    No exams found.
+                </td>
+            </tr>
+
+            <% } %>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+</body>
+</html>

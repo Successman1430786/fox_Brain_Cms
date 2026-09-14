@@ -1,11 +1,11 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class ExamAnswer {
 
     private long id;
+
     private long attemptId;
     private long examQuestionId;
 
@@ -13,7 +13,7 @@ public class ExamAnswer {
 
     private String answerText;
 
-    private BigDecimal marksObtained;
+    private Double marksObtained;
 
     private Boolean correct;
 
@@ -21,12 +21,12 @@ public class ExamAnswer {
 
     private String teacherRemarks;
 
-    private LocalDateTime answeredAt;
-    private LocalDateTime evaluatedAt;
+    private Timestamp answeredAt;
+    private Timestamp evaluatedAt;
 
-    // Optional display fields
     private String questionText;
     private String questionType;
+
     private String selectedOptionText;
 
     public ExamAnswer() {
@@ -72,11 +72,11 @@ public class ExamAnswer {
         this.answerText = answerText;
     }
 
-    public BigDecimal getMarksObtained() {
+    public Double getMarksObtained() {
         return marksObtained;
     }
 
-    public void setMarksObtained(BigDecimal marksObtained) {
+    public void setMarksObtained(Double marksObtained) {
         this.marksObtained = marksObtained;
     }
 
@@ -104,19 +104,19 @@ public class ExamAnswer {
         this.teacherRemarks = teacherRemarks;
     }
 
-    public LocalDateTime getAnsweredAt() {
+    public Timestamp getAnsweredAt() {
         return answeredAt;
     }
 
-    public void setAnsweredAt(LocalDateTime answeredAt) {
+    public void setAnsweredAt(Timestamp answeredAt) {
         this.answeredAt = answeredAt;
     }
 
-    public LocalDateTime getEvaluatedAt() {
+    public Timestamp getEvaluatedAt() {
         return evaluatedAt;
     }
 
-    public void setEvaluatedAt(LocalDateTime evaluatedAt) {
+    public void setEvaluatedAt(Timestamp evaluatedAt) {
         this.evaluatedAt = evaluatedAt;
     }
 

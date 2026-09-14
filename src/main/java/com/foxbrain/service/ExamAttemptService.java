@@ -1,245 +1,320 @@
 package com.foxbrain.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import com.foxbrain.dao.ExamAttemptDAO;
-import com.foxbrain.dao.ExamDAO;
-import com.foxbrain.model.Exam;
 import com.foxbrain.model.ExamAttempt;
+
+import java.sql.Timestamp;
+import java.util.List;
 
 public class ExamAttemptService {
 
-    private final ExamAttemptDAO attemptDAO = new ExamAttemptDAO();
-    private final ExamDAO examDAO = new ExamDAO();
+    private final ExamAttemptDAO attemptDAO;
 
-    public ExamAttempt getAttemptById(long id) {
+    public ExamAttemptService() {
+        this.attemptDAO = new ExamAttemptDAO();
+    }
+
+    // =====================================================
+    // START EXAM
+    // =====================================================
+
+    public long startExam(
+            long examId,
+            long studentId) {
+
+        validateId(examId);
+        validateId(studentId);
+
+        try {
+
+            ExamAttempt active =
+                    attemptDAO.getActiveAttempt(
+                            examId,
+                            studentId
+                    );
+
+            if (active != null) {
+                return active.getId();
+            }
+
+            int attemptNumber =
+                    attemptDAO.getNextAttemptNumber(
+                            examId,
+                            studentId
+                    );
+
+            ExamAttempt attempt =
+                    new ExamAttempt();
+
+            attempt.setExamId(examId);
+            attempt.setStudentId(studentId);
+
+            attempt.setAttemptNumber(
+                    attemptNumber
+            );
+
+            attempt.setStartedAt(
+                    new Timestamp(
+                            System.currentTimeMillis()
+                    )
+            );
+
+            attempt.setStatus(
+                    "IN_PROGRESS"
+            );
+
+            return attemptDAO.create(attempt);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to start exam.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET ATTEMPT
+    // =====================================================
+
+    public ExamAttempt getAttempt(long id) {
+
+        validateId(id);
+
+        try {
+            return attemptDAO.getById(id);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load exam attempt.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET ACTIVE ATTEMPT
+    // =====================================================
+
+    public ExamAttempt getActiveAttempt(
+            long examId,
+            long studentId) {
+
+        validateId(examId);
+        validateId(studentId);
+
+        try {
+            return attemptDAO.getActiveAttempt(
+                    examId,
+                    studentId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load active exam attempt.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET STUDENT ATTEMPTS
+    // =====================================================
+
+    public List<ExamAttempt> getStudentAttempts(
+            long studentId) {
+
+        validateId(studentId);
+
+        try {
+            return attemptDAO.getByStudentId(
+                    studentId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load student attempts.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET EXAM ATTEMPTS
+    // =====================================================
+
+    public List<ExamAttempt> getExamAttempts(
+            long examId) {
+
+        validateId(examId);
+
+        try {
+            return attemptDAO.getByExamId(
+                    examId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load exam attempts.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // SUBMIT EXAM
+    // =====================================================
+
+    public boolean submitExam(
+            long attemptId,
+            boolean autoSubmitted) {
+
+        validateId(attemptId);
+
+        try {
+
+            return attemptDAO.submit(
+                    attemptId,
+                    autoSubmitted
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to submit exam.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // ABANDON ATTEMPT
+    // =====================================================
+
+    public boolean abandonAttempt(
+            long attemptId) {
+
+        validateId(attemptId);
+
+        try {
+            return attemptDAO.abandon(
+                    attemptId
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to abandon exam attempt.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // UPDATE STATUS
+    // =====================================================
+
+    public boolean updateStatus(
+            long attemptId,
+            String status) {
+
+        validateId(attemptId);
+
+        if (status == null ||
+                status.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Attempt status is required."
+            );
+        }
+
+        try {
+            return attemptDAO.updateStatus(
+                    attemptId,
+                    status
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to update attempt status.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // UPDATE MARKS
+    // =====================================================
+
+    public boolean updateMarks(
+            long attemptId,
+            double totalMarks,
+            double obtainedMarks) {
+
+        validateId(attemptId);
+
+        if (totalMarks < 0) {
+            throw new IllegalArgumentException(
+                    "Total marks cannot be negative."
+            );
+        }
+
+        if (obtainedMarks < 0) {
+            throw new IllegalArgumentException(
+                    "Obtained marks cannot be negative."
+            );
+        }
+
+        try {
+            return attemptDAO.updateMarks(
+                    attemptId,
+                    totalMarks,
+                    obtainedMarks
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to update attempt marks.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // VALIDATE ID
+    // =====================================================
+
+    private void validateId(long id) {
 
         if (id <= 0) {
-            return null;
+            throw new IllegalArgumentException(
+                    "Invalid ID."
+            );
         }
-
-        return attemptDAO.getById(id);
-    }
-
-    public List<ExamAttempt> getAttemptsByExam(long examId) {
-
-        if (examId <= 0) {
-            return List.of();
-        }
-
-        return attemptDAO.getByExamId(examId);
-    }
-
-    public List<ExamAttempt> getAttemptsByStudent(long studentId) {
-
-        if (studentId <= 0) {
-            return List.of();
-        }
-
-        return attemptDAO.getByStudentId(studentId);
-    }
-
-    public ExamAttempt getActiveAttempt(long examId,
-                                        long studentId) {
-
-        if (examId <= 0 || studentId <= 0) {
-            return null;
-        }
-
-        return attemptDAO.getActiveAttempt(
-                examId,
-                studentId);
-    }
-
-    public ExamAttempt startAttempt(long examId,
-                                    long studentId) {
-
-        if (examId <= 0 || studentId <= 0) {
-            return null;
-        }
-
-        Exam exam = examDAO.getById(examId);
-
-        if (exam == null) {
-            return null;
-        }
-
-        /*
-         * Attempts are only for ONLINE exams.
-         */
-        if (exam.getExamMode() == null ||
-            !exam.getExamMode().equalsIgnoreCase("ONLINE")) {
-
-            return null;
-        }
-
-        /*
-         * Exam must be scheduled.
-         */
-        if (exam.getStatus() == null ||
-            !exam.getStatus().equalsIgnoreCase("SCHEDULED")) {
-
-            return null;
-        }
-
-        /*
-         * Do not create duplicate active attempts.
-         */
-        ExamAttempt active =
-                attemptDAO.getActiveAttempt(
-                        examId,
-                        studentId);
-
-        if (active != null) {
-            return active;
-        }
-
-        int attemptNumber =
-                attemptDAO.getNextAttemptNumber(
-                        examId,
-                        studentId);
-
-        ExamAttempt attempt = new ExamAttempt();
-
-        attempt.setExamId(examId);
-        attempt.setStudentId(studentId);
-        attempt.setAttemptNumber(attemptNumber);
-        attempt.setAutoSubmitted(false);
-        attempt.setStatus("IN_PROGRESS");
-
-        /*
-         * DAO create implementation should set started_at.
-         */
-        long id = attemptDAO.create(attempt);
-
-        if (id <= 0) {
-            return null;
-        }
-
-        return attemptDAO.getById(id);
-    }
-
-    public boolean submitAttempt(long attemptId) {
-
-        if (attemptId <= 0) {
-            return false;
-        }
-
-        ExamAttempt attempt =
-                attemptDAO.getById(attemptId);
-
-        if (attempt == null) {
-            return false;
-        }
-
-        if (!"IN_PROGRESS".equalsIgnoreCase(
-                attempt.getStatus())) {
-
-            return false;
-        }
-
-        return attemptDAO.submit(
-                attemptId,
-                false);
-    }
-
-    public boolean autoSubmitAttempt(long attemptId) {
-
-        if (attemptId <= 0) {
-            return false;
-        }
-
-        ExamAttempt attempt =
-                attemptDAO.getById(attemptId);
-
-        if (attempt == null) {
-            return false;
-        }
-
-        if (!"IN_PROGRESS".equalsIgnoreCase(
-                attempt.getStatus())) {
-
-            return false;
-        }
-
-        return attemptDAO.submit(
-                attemptId,
-                true);
-    }
-
-    public boolean abandonAttempt(long attemptId) {
-
-        if (attemptId <= 0) {
-            return false;
-        }
-
-        ExamAttempt attempt =
-                attemptDAO.getById(attemptId);
-
-        if (attempt == null) {
-            return false;
-        }
-
-        if (!"IN_PROGRESS".equalsIgnoreCase(
-                attempt.getStatus())) {
-
-            return false;
-        }
-
-        return attemptDAO.abandon(attemptId);
-    }
-
-    public boolean markEvaluated(long attemptId,
-                                 BigDecimal totalMarks,
-                                 BigDecimal obtainedMarks) {
-
-        if (attemptId <= 0) {
-            return false;
-        }
-
-        if (totalMarks == null ||
-            totalMarks.compareTo(BigDecimal.ZERO) < 0) {
-
-            return false;
-        }
-
-        if (obtainedMarks == null) {
-            return false;
-        }
-
-        return attemptDAO.updateMarks(
-                attemptId,
-                totalMarks,
-                obtainedMarks);
-    }
-
-    public boolean updateStatus(long attemptId,
-                                String status) {
-
-        if (attemptId <= 0 ||
-            status == null ||
-            status.trim().isEmpty()) {
-
-            return false;
-        }
-
-        String value = status.trim().toUpperCase();
-
-        if (!isValidStatus(value)) {
-            return false;
-        }
-
-        return attemptDAO.updateStatus(
-                attemptId,
-                value);
-    }
-
-    private boolean isValidStatus(String status) {
-
-        return status.equals("IN_PROGRESS")
-                || status.equals("SUBMITTED")
-                || status.equals("EVALUATED")
-                || status.equals("ABANDONED");
     }
 }

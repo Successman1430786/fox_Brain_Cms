@@ -1,76 +1,136 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
+<%
+    String contextPath = request.getContextPath();
+%>
+
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Create Exam - FoxBrain</title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 1000px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        .checks {
+            display: flex;
+            gap: 25px;
+            margin-top: 10px;
+        }
+
+        .checks label {
+            font-weight: normal;
+        }
+
+        .checks input {
+            width: auto;
+        }
+
+        .actions {
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        .cancel {
+            margin-left: 10px;
+            text-decoration: none;
+        }
+    </style>
 </head>
 
 <body>
 
-<%@ include file="/includes/admin-sidebar.jsp" %>
+
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
-        <div>
-            <h1>Create Exam</h1>
-            <p>Create an online or offline examination.</p>
-        </div>
+    <h1>Create Exam</h1>
 
-        <a href="<%= request.getContextPath() %>/admin/exams?action=list"
-           class="btn btn-secondary">
-            Back
-        </a>
-    </div>
-
-    <div class="card">
+    <div class="form-box">
 
         <form method="post"
-              action="<%= request.getContextPath() %>/admin/exams">
+              action="<%= contextPath %>/admin/exams">
 
             <input type="hidden"
                    name="action"
                    value="create">
 
-            <div class="form-grid">
+            <div class="grid">
 
-                <div class="form-group">
-
+                <div>
                     <label>Batch ID *</label>
-
                     <input type="number"
                            name="batchId"
                            min="1"
                            required>
-
-                    <small>Enter the batch ID for this exam.</small>
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Exam Title *</label>
-
                     <input type="text"
                            name="title"
                            maxlength="255"
-                           required
-                           placeholder="e.g. Java Mid Term Examination">
-
+                           required>
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Exam Type *</label>
 
                     <select name="examType" required>
 
-                        <option value="">Select Type</option>
+                        <option value="">Select type</option>
                         <option value="QUIZ">Quiz</option>
                         <option value="MIDTERM">Midterm</option>
                         <option value="FINAL">Final</option>
@@ -79,66 +139,58 @@
                         <option value="OTHER">Other</option>
 
                     </select>
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Exam Mode *</label>
 
-                    <select name="examMode"
-                            id="examMode"
-                            required
-                            onchange="toggleRoom()">
+                    <select name="examMode" required>
 
-                        <option value="">Select Mode</option>
+                        <option value="">Select mode</option>
                         <option value="ONLINE">Online</option>
                         <option value="OFFLINE">Offline</option>
 
                     </select>
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Exam Date</label>
 
                     <input type="date"
                            name="examDate">
-
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <label>Room</label>
 
+                    <input type="text"
+                           name="roomName"
+                           maxlength="100">
+                </div>
+
+                <div>
                     <label>Start Time</label>
 
                     <input type="time"
                            name="startTime">
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>End Time</label>
 
                     <input type="time"
                            name="endTime">
-
                 </div>
 
-                <div class="form-group">
-
-                    <label>Duration (Minutes)</label>
+                <div>
+                    <label>Duration (minutes)</label>
 
                     <input type="number"
                            name="durationMinutes"
-                           min="1"
-                           placeholder="e.g. 120">
-
+                           min="1">
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Total Marks *</label>
 
                     <input type="number"
@@ -146,122 +198,96 @@
                            min="0.01"
                            step="0.01"
                            required>
-
                 </div>
 
-                <div class="form-group">
-
+                <div>
                     <label>Passing Marks</label>
 
                     <input type="number"
                            name="passingMarks"
                            min="0"
                            step="0.01">
-
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <label>Status</label>
 
-                    <label>Room Name</label>
+                    <select name="status">
 
-                    <input type="text"
-                           name="roomName"
-                           id="roomName"
-                           maxlength="100"
-                           placeholder="e.g. Lab 2">
+                        <option value="DRAFT">
+                            Draft
+                        </option>
 
-                </div>
+                        <option value="SCHEDULED">
+                            Scheduled
+                        </option>
 
-                <div class="form-group">
+                        <option value="COMPLETED">
+                            Completed
+                        </option>
 
-                    <label>Status *</label>
-
-                    <select name="status" required>
-
-                        <option value="DRAFT">Draft</option>
-                        <option value="SCHEDULED">Scheduled</option>
-                        <option value="COMPLETED">Completed</option>
-                        <option value="CANCELLED">Cancelled</option>
+                        <option value="CANCELLED">
+                            Cancelled
+                        </option>
 
                     </select>
+                </div>
+
+                <div class="full">
+
+                    <label>Instructions</label>
+
+                    <textarea name="instructions"></textarea>
+
+                </div>
+
+                <div class="full">
+
+                    <div class="checks">
+
+                        <label>
+                            <input type="checkbox"
+                                   name="allowNavigation"
+                                   checked>
+                            Allow question navigation
+                        </label>
+
+                        <label>
+                            <input type="checkbox"
+                                   name="shuffleQuestions">
+                            Shuffle questions
+                        </label>
+
+                        <label>
+                            <input type="checkbox"
+                                   name="shuffleOptions">
+                            Shuffle options
+                        </label>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <div class="form-group">
+            <div class="actions">
 
-                <label>Instructions</label>
+                <button type="submit">
+                    Create Exam
+                </button>
 
-                <textarea name="instructions"
-                          rows="6"
-                          placeholder="Enter exam instructions..."></textarea>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Online Exam Settings</label>
-
-                <div>
-                    <label>
-                        <input type="checkbox"
-                               name="allowNavigation"
-                               checked>
-                        Allow question navigation
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        <input type="checkbox"
-                               name="shuffleQuestions">
-                        Shuffle questions
-                    </label>
-                </div>
-
-                <div>
-                    <label>
-                        <input type="checkbox"
-                               name="shuffleOptions">
-                        Shuffle options
-                    </label>
-                </div>
+                <a class="cancel"
+                   href="<%= contextPath %>/admin/exams">
+                    Cancel
+                </a>
 
             </div>
-
-            <button type="submit"
-                    class="btn btn-primary">
-                Create Exam
-            </button>
-
-            <a href="<%= request.getContextPath() %>/admin/exams?action=list"
-               class="btn btn-secondary">
-                Cancel
-            </a>
 
         </form>
 
     </div>
 
 </div>
-
-<script>
-function toggleRoom() {
-
-    const mode =
-        document.getElementById("examMode").value;
-
-    const room =
-        document.getElementById("roomName");
-
-    if (mode === "OFFLINE") {
-        room.required = true;
-    } else {
-        room.required = false;
-    }
-}
-</script>
 
 </body>
 </html>

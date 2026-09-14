@@ -2,27 +2,62 @@
 <%@ page import="com.foxbrain.model.ExamResult" %>
 
 <%
+    String contextPath = request.getContextPath();
+
     ExamResult result =
             (ExamResult) request.getAttribute("result");
-
-    if (result == null) {
-        response.sendRedirect(
-            request.getContextPath()
-            + "/admin/exam-results?action=list"
-        );
-        return;
-    }
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <title>Result Details - FoxBrain</title>
 
-    <title>Result - FoxBrain</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+        .content {
+            padding: 30px;
+        }
 
+        .card {
+            background: white;
+            padding: 30px;
+            max-width: 700px;
+            border-radius: 10px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .pass {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
 <body>
@@ -30,125 +65,138 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
-
-        <div>
-
-            <h1>Exam Result</h1>
-
-            <p>
-                Result #<%= result.getId() %>
-            </p>
-
-        </div>
-
-        <a href="<%= request.getContextPath() %>/admin/exam-results?action=list"
-           class="btn btn-secondary">
-            Back
-        </a>
-
-    </div>
+    <h1>Result Details</h1>
 
     <div class="card">
 
-        <table class="admin-table">
+        <% if (result != null) { %>
 
-            <tr>
-                <th>Result ID</th>
-                <td><%= result.getId() %></td>
-            </tr>
+            <div class="row">
+                <strong>Exam</strong>
 
-            <tr>
-                <th>Exam</th>
-                <td>
-                    <%= result.getExamTitle() == null
-                            ? result.getExamId()
-                            : result.getExamTitle() %>
-                </td>
-            </tr>
+                <span>
+                    <%= result.getExamTitle() != null
+                            ? result.getExamTitle()
+                            : result.getExamId() %>
+                </span>
+            </div>
 
-            <tr>
-                <th>Student</th>
-                <td>
-                    <%= result.getStudentName() == null
-                            ? result.getStudentId()
-                            : result.getStudentName() %>
-                </td>
-            </tr>
+            <div class="row">
+                <strong>Student</strong>
 
-            <tr>
-                <th>Admission Number</th>
-                <td>
-                    <%= result.getAdmissionNumber() == null
-                            ? "-"
-                            : result.getAdmissionNumber() %>
-                </td>
-            </tr>
+                <span>
+                    <%= result.getStudentName() != null
+                            ? result.getStudentName()
+                            : result.getStudentId() %>
+                </span>
+            </div>
 
-            <tr>
-                <th>Marks Obtained</th>
-                <td>
+            <div class="row">
+                <strong>Admission Number</strong>
+
+                <span>
+                    <%= result.getAdmissionNumber() != null
+                            ? result.getAdmissionNumber()
+                            : "-" %>
+                </span>
+            </div>
+
+            <div class="row">
+                <strong>Marks Obtained</strong>
+
+                <span>
                     <%= result.getMarksObtained() %>
-                </td>
-            </tr>
+                </span>
+            </div>
 
-            <tr>
-                <th>Grade</th>
-                <td>
-                    <%= result.getGrade() == null
-                            ? "-"
-                            : result.getGrade() %>
-                </td>
-            </tr>
+            <div class="row">
+                <strong>Grade</strong>
 
-            <tr>
-                <th>Result Status</th>
-                <td>
+                <span>
+                    <%= result.getGrade() != null
+                            ? result.getGrade()
+                            : "-" %>
+                </span>
+            </div>
+
+            <div class="row">
+                <strong>Status</strong>
+
+                <span class="<%= "PASS".equals(
+                        result.getResultStatus())
+                        ? "pass"
+                        : "fail" %>">
+
                     <%= result.getResultStatus() %>
-                </td>
-            </tr>
 
-            <tr>
-                <th>Remarks</th>
-                <td>
-                    <%= result.getRemarks() == null
-                            ? "-"
-                            : result.getRemarks() %>
-                </td>
-            </tr>
+                </span>
+            </div>
 
-            <tr>
-                <th>Published At</th>
-                <td>
-                    <%= result.getPublishedAt() == null
-                            ? "Not Published"
-                            : result.getPublishedAt() %>
-                </td>
-            </tr>
+            <div class="row">
+                <strong>Remarks</strong>
 
-        </table>
+                <span>
+                    <%= result.getRemarks() != null
+                            ? result.getRemarks()
+                            : "-" %>
+                </span>
+            </div>
 
-    </div>
+            <div class="row">
+                <strong>Published</strong>
 
-    <div class="card">
+                <span>
+                    <%= result.getPublishedAt() != null
+                            ? "Yes"
+                            : "No" %>
+                </span>
+            </div>
 
-        <% if (result.getPublishedAt() == null) { %>
+            <% if (result.getPublishedAt() == null) { %>
 
-            <a href="<%= request.getContextPath() %>/admin/exam-results?action=publish&id=<%= result.getId() %>"
-               class="btn btn-primary"
-               onclick="return confirm('Publish this result?');">
-                Publish Result
-            </a>
+                <form method="post"
+                      action="<%= contextPath %>/admin/exam-results">
+
+                    <input type="hidden"
+                           name="action"
+                           value="publish">
+
+                    <input type="hidden"
+                           name="id"
+                           value="<%= result.getId() %>">
+
+                    <button type="submit">
+                        Publish Result
+                    </button>
+
+                </form>
+
+            <% } else { %>
+
+                <form method="post"
+                      action="<%= contextPath %>/admin/exam-results">
+
+                    <input type="hidden"
+                           name="action"
+                           value="unpublish">
+
+                    <input type="hidden"
+                           name="id"
+                           value="<%= result.getId() %>">
+
+                    <button type="submit">
+                        Unpublish Result
+                    </button>
+
+                </form>
+
+            <% } %>
 
         <% } else { %>
 
-            <a href="<%= request.getContextPath() %>/admin/exam-results?action=unpublish&id=<%= result.getId() %>"
-               class="btn btn-secondary"
-               onclick="return confirm('Unpublish this result?');">
-                Unpublish Result
-            </a>
+            <p>Result not found.</p>
 
         <% } %>
 

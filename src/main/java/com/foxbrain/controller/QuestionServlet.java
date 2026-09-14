@@ -1,7 +1,7 @@
 package com.foxbrain.controller;
 
-import java.io.IOException;
-import java.math.BigDecimal;
+import com.foxbrain.model.Question;
+import com.foxbrain.service.QuestionService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -9,11 +9,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.foxbrain.model.Question;
-import com.foxbrain.model.QuestionOption;
-import com.foxbrain.service.QuestionService;
+import java.io.IOException;
 
-@WebServlet("/admin/question-bank")
+@WebServlet("/admin/questions")
 public class QuestionServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -21,9 +19,14 @@ public class QuestionServlet extends HttpServlet {
     private QuestionService questionService;
 
     @Override
-    public void init() throws ServletException {
-        questionService = new QuestionService();
+    public void init() {
+        questionService =
+                new QuestionService();
     }
+
+    // =====================================================
+    // GET
+    // =====================================================
 
     @Override
     protected void doGet(
@@ -31,38 +34,48 @@ public class QuestionServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        String action = request.getParameter("action");
+        try {
 
-        if (action == null || action.trim().isEmpty()) {
-            action = "list";
-        }
+            String action =
+                    request.getParameter("action");
 
-        switch (action) {
+            if ("view".equalsIgnoreCase(action)) {
 
-            case "list":
-                listQuestions(request, response);
-                break;
-
-            case "view":
                 viewQuestion(request, response);
-                break;
 
-            case "edit":
+            } else if ("edit".equalsIgnoreCase(action)) {
+
                 editQuestion(request, response);
-                break;
 
-            case "delete":
+            } else if ("delete".equalsIgnoreCase(action)) {
+
                 deleteQuestion(request, response);
-                break;
 
-            case "options":
-                listOptions(request, response);
-                break;
+            } else if ("options".equalsIgnoreCase(action)) {
 
-            default:
-                redirectList(request, response);
+                options(request, response);
+
+            } else {
+
+                listQuestions(request, response);
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            listQuestions(request, response);
         }
     }
+
+    // =====================================================
+    // POST
+    // =====================================================
 
     @Override
     protected void doPost(
@@ -70,33 +83,51 @@ public class QuestionServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        String action = request.getParameter("action");
+        request.setCharacterEncoding("UTF-8");
 
-        if ("create".equalsIgnoreCase(action)) {
+        try {
 
-            createQuestion(request, response);
+            String action =
+                    request.getParameter("action");
 
-        } else if ("update".equalsIgnoreCase(action)) {
+            if ("create".equalsIgnoreCase(action)) {
 
-            updateQuestion(request, response);
+                createQuestion(
+                        request,
+                        response
+                );
 
-        } else if ("addOption".equalsIgnoreCase(action)) {
+            } else if ("update".equalsIgnoreCase(action)) {
 
-            addOption(request, response);
+                updateQuestion(
+                        request,
+                        response
+                );
 
-        } else if ("updateOption".equalsIgnoreCase(action)) {
+            } else {
 
-            updateOption(request, response);
+                response.sendError(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "Invalid action."
+                );
+            }
 
-        } else if ("deleteOption".equalsIgnoreCase(action)) {
+        } catch (Exception e) {
 
-            deleteOption(request, response);
+            e.printStackTrace();
 
-        } else {
+            request.setAttribute(
+                    "error",
+                    e.getMessage()
+            );
 
-            redirectList(request, response);
+            listQuestions(request, response);
         }
     }
+
+    // =====================================================
+    // LIST
+    // =====================================================
 
     private void listQuestions(
             HttpServletRequest request,
@@ -105,338 +136,190 @@ public class QuestionServlet extends HttpServlet {
 
         request.setAttribute(
                 "questions",
-                questionService.getAllQuestions());
+                questionService.getAllQuestions()
+        );
 
         request.getRequestDispatcher(
-                "/admin/exams/question-bank.jsp")
-                .forward(request, response);
+                "/admin/exams/question-bank.jsp"
+        ).forward(request, response);
     }
+
+    // =====================================================
+    // VIEW
+    // =====================================================
 
     private void viewQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long id = parseLong(
-                request.getParameter("id"));
-
-        if (id == null) {
-            redirectList(request, response);
-            return;
-        }
+        long id =
+                parseId(
+                        request.getParameter("id")
+                );
 
         Question question =
                 questionService.getQuestionById(id);
 
         if (question == null) {
-            redirectList(request, response);
+
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Question not found."
+            );
+
             return;
         }
 
         request.setAttribute(
                 "question",
-                question);
+                question
+        );
 
         request.getRequestDispatcher(
-                "/admin/exams/question-view.jsp")
-                .forward(request, response);
+                "/admin/exams/question-view.jsp"
+        ).forward(request, response);
     }
+
+    // =====================================================
+    // EDIT
+    // =====================================================
 
     private void editQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long id = parseLong(
-                request.getParameter("id"));
-
-        if (id == null) {
-            redirectList(request, response);
-            return;
-        }
+        long id =
+                parseId(
+                        request.getParameter("id")
+                );
 
         Question question =
                 questionService.getQuestionById(id);
 
         if (question == null) {
-            redirectList(request, response);
+
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND,
+                    "Question not found."
+            );
+
             return;
         }
 
         request.setAttribute(
                 "question",
-                question);
+                question
+        );
 
         request.getRequestDispatcher(
-                "/admin/exams/question-edit.jsp")
-                .forward(request, response);
+                "/admin/exams/question-edit.jsp"
+        ).forward(request, response);
     }
+
+    // =====================================================
+    // CREATE
+    // =====================================================
 
     private void createQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        try {
+        Question question =
+                buildQuestion(request);
 
-            Question question =
-                    buildQuestion(request);
+        long id =
+                questionService.createQuestion(
+                        question
+                );
 
-            boolean success =
-                    questionService.createQuestion(
-                            question);
-
-            if (success) {
-
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/question-bank?action=list&success=created");
-
-            } else {
-
-                redirectError(
-                        request,
-                        response,
-                        "Unable to create question.");
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Invalid question information.");
-        }
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/questions?action=view&id="
+                        + id
+        );
     }
+
+    // =====================================================
+    // UPDATE
+    // =====================================================
 
     private void updateQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        try {
+        long id =
+                parseId(
+                        request.getParameter("id")
+                );
 
-            Long id =
-                    parseLong(
-                            request.getParameter("id"));
+        Question question =
+                buildQuestion(request);
 
-            if (id == null) {
-                redirectError(
-                        request,
-                        response,
-                        "Invalid question ID.");
-                return;
-            }
+        question.setId(id);
 
-            Question question =
-                    buildQuestion(request);
+        questionService.updateQuestion(
+                question
+        );
 
-            question.setId(id);
-
-            boolean success =
-                    questionService.updateQuestion(
-                            question);
-
-            if (success) {
-
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/question-bank?action=list&success=updated");
-
-            } else {
-
-                redirectError(
-                        request,
-                        response,
-                        "Unable to update question.");
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Invalid question information.");
-        }
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/questions?action=view&id="
+                        + id
+        );
     }
+
+    // =====================================================
+    // DELETE
+    // =====================================================
 
     private void deleteQuestion(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        Long id =
-                parseLong(
-                        request.getParameter("id"));
+        long id =
+                parseId(
+                        request.getParameter("id")
+                );
 
-        if (id == null) {
-            redirectList(request, response);
-            return;
-        }
+        questionService.deleteQuestion(id);
 
-        boolean success =
-                questionService.deleteQuestion(id);
-
-        if (success) {
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/question-bank?action=list&success=deleted");
-
-        } else {
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to delete question.");
-        }
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/questions"
+        );
     }
 
-    private void listOptions(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
+    // =====================================================
+    // OPTIONS
+    // =====================================================
 
-        Long questionId =
-                parseLong(
-                        request.getParameter("questionId"));
-
-        if (questionId == null) {
-            redirectList(request, response);
-            return;
-        }
-
-        request.setAttribute(
-                "options",
-                questionService.getOptions(questionId));
-
-        request.setAttribute(
-                "question",
-                questionService.getQuestionById(questionId));
-
-        request.getRequestDispatcher(
-                "/admin/exams/question-options.jsp")
-                .forward(request, response);
-    }
-
-    private void addOption(
+    private void options(
             HttpServletRequest request,
             HttpServletResponse response)
             throws IOException {
 
-        try {
+        long questionId =
+                parseId(
+                        request.getParameter(
+                                "id"
+                        )
+                );
 
-            QuestionOption option =
-                    buildOption(request);
-
-            boolean success =
-                    questionService.addOption(option);
-
-            long questionId =
-                    option.getQuestionId();
-
-            if (success) {
-
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/admin/question-bank?action=options&questionId="
+        response.sendRedirect(
+                request.getContextPath()
+                        + "/admin/question-options?questionId="
                         + questionId
-                        + "&success=added");
-
-            } else {
-
-                redirectError(
-                        request,
-                        response,
-                        "Unable to add option.");
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Invalid option.");
-        }
+        );
     }
 
-    private void updateOption(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        try {
-
-            QuestionOption option =
-                    buildOption(request);
-
-            option.setId(
-                    Long.parseLong(
-                            request.getParameter("id")));
-
-            boolean success =
-                    questionService.updateOption(option);
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/question-bank?action=options&questionId="
-                    + option.getQuestionId()
-                    + "&success="
-                    + (success ? "updated" : "false"));
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to update option.");
-        }
-    }
-
-    private void deleteOption(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        try {
-
-            long optionId =
-                    Long.parseLong(
-                            request.getParameter("id"));
-
-            long questionId =
-                    Long.parseLong(
-                            request.getParameter("questionId"));
-
-            boolean success =
-                    questionService.deleteOption(
-                            optionId);
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/admin/question-bank?action=options&questionId="
-                    + questionId
-                    + "&success="
-                    + (success ? "deleted" : "false"));
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            redirectError(
-                    request,
-                    response,
-                    "Unable to delete option.");
-        }
-    }
+    // =====================================================
+    // BUILD QUESTION
+    // =====================================================
 
     private Question buildQuestion(
             HttpServletRequest request) {
@@ -448,147 +331,99 @@ public class QuestionServlet extends HttpServlet {
                 request.getParameter("courseId");
 
         if (courseId != null &&
-            !courseId.trim().isEmpty()) {
+                !courseId.trim().isEmpty()) {
 
             question.setCourseId(
-                    Long.parseLong(courseId));
+                    Long.parseLong(courseId)
+            );
         }
 
         question.setQuestionText(
-                trim(
-                        request.getParameter(
-                                "questionText")));
+                request.getParameter(
+                        "questionText"
+                )
+        );
 
         question.setQuestionType(
-                trim(
-                        request.getParameter(
-                                "questionType")));
+                request.getParameter(
+                        "questionType"
+                )
+        );
 
         question.setDifficulty(
-                trim(
-                        request.getParameter(
-                                "difficulty")));
+                request.getParameter(
+                        "difficulty"
+                )
+        );
 
         String marks =
-                trim(
-                        request.getParameter(
-                                "defaultMarks"));
+                request.getParameter(
+                        "defaultMarks"
+                );
 
-        if (!marks.isEmpty()) {
+        if (marks != null &&
+                !marks.trim().isEmpty()) {
 
             question.setDefaultMarks(
-                    new BigDecimal(marks));
+                    Double.parseDouble(marks)
+            );
         }
 
-        String negativeMarks =
-                trim(
-                        request.getParameter(
-                                "negativeMarks"));
+        String negative =
+                request.getParameter(
+                        "negativeMarks"
+                );
 
-        if (!negativeMarks.isEmpty()) {
+        if (negative != null &&
+                !negative.trim().isEmpty()) {
 
             question.setNegativeMarks(
-                    new BigDecimal(
-                            negativeMarks));
+                    Double.parseDouble(negative)
+            );
         }
 
         question.setExplanation(
-                trim(
-                        request.getParameter(
-                                "explanation")));
-
-        question.setStatus(
-                trim(
-                        request.getParameter(
-                                "status")));
+                request.getParameter(
+                        "explanation"
+                )
+        );
 
         return question;
     }
 
-    private QuestionOption buildOption(
-            HttpServletRequest request) {
+    // =====================================================
+    // ID
+    // =====================================================
 
-        QuestionOption option =
-                new QuestionOption();
+    private long parseId(String value) {
 
-        String questionId =
-                request.getParameter(
-                        "questionId");
+        if (value == null ||
+                value.trim().isEmpty()) {
 
-        if (questionId != null &&
-            !questionId.trim().isEmpty()) {
-
-            option.setQuestionId(
-                    Long.parseLong(questionId));
+            throw new IllegalArgumentException(
+                    "ID is required."
+            );
         }
-
-        option.setOptionText(
-                trim(
-                        request.getParameter(
-                                "optionText")));
-
-        String order =
-                trim(
-                        request.getParameter(
-                                "optionOrder"));
-
-        if (!order.isEmpty()) {
-
-            option.setOptionOrder(
-                    Integer.parseInt(order));
-        }
-
-        option.setCorrect(
-                request.getParameter(
-                        "isCorrect") != null);
-
-        return option;
-    }
-
-    private Long parseLong(String value) {
 
         try {
 
-            if (value == null ||
-                value.trim().isEmpty()) {
+            long id =
+                    Long.parseLong(value);
 
-                return null;
+            if (id <= 0) {
+
+                throw new IllegalArgumentException(
+                        "Invalid ID."
+                );
             }
 
-            return Long.parseLong(value.trim());
+            return id;
 
         } catch (NumberFormatException e) {
 
-            return null;
+            throw new IllegalArgumentException(
+                    "Invalid ID."
+            );
         }
-    }
-
-    private String trim(String value) {
-
-        return value == null ? "" : value.trim();
-    }
-
-    private void redirectList(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/question-bank?action=list");
-    }
-
-    private void redirectError(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            String message)
-            throws IOException {
-
-        response.sendRedirect(
-                request.getContextPath()
-                + "/admin/question-bank?action=list&error="
-                + java.net.URLEncoder.encode(
-                        message,
-                        java.nio.charset.StandardCharsets.UTF_8));
     }
 }

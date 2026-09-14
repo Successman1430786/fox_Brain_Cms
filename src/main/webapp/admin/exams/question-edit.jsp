@@ -2,25 +2,68 @@
 <%@ page import="com.foxbrain.model.Question" %>
 
 <%
+    String contextPath = request.getContextPath();
+
     Question question =
             (Question) request.getAttribute("question");
 
     boolean editing =
-            question != null && question.getId() > 0;
+            question != null;
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
 
     <title>
         <%= editing ? "Edit Question" : "Add Question" %>
         - FoxBrain
     </title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
+        .content {
+            padding: 30px;
+        }
+
+        .box {
+            background: white;
+            padding: 25px;
+            max-width: 900px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        textarea {
+            min-height: 150px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 11px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+        }
+    </style>
 </head>
 
 <body>
@@ -28,33 +71,16 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <h1>
+        <%= editing ? "Edit Question" : "Add Question" %>
+    </h1>
 
-        <div>
-
-            <h1>
-                <%= editing ? "Edit Question" : "Add Question" %>
-            </h1>
-
-            <p>
-                Manage questions for the FoxBrain question bank.
-            </p>
-
-        </div>
-
-        <a href="<%= request.getContextPath() %>/admin/question-bank?action=list"
-           class="btn btn-secondary">
-            Back
-        </a>
-
-    </div>
-
-    <div class="card">
+    <div class="box">
 
         <form method="post"
-              action="<%= request.getContextPath() %>/admin/question-bank">
+              action="<%= contextPath %>/admin/questions">
 
             <input type="hidden"
                    name="action"
@@ -68,170 +94,115 @@
 
             <% } %>
 
-            <div class="form-grid">
+            <label>Course ID</label>
 
-                <div class="form-group">
+            <input type="number"
+                   name="courseId"
+                   min="1"
+                   value="<%= editing && question.getCourseId() != null
+                            ? question.getCourseId()
+                            : "" %>">
 
-                    <label>Course ID</label>
+            <label>Question Text *</label>
 
-                    <input type="number"
-                           name="courseId"
-                           min="1"
-                           value="<%= editing && question.getCourseId() != null
-                                    ? question.getCourseId()
-                                    : "" %>">
+            <textarea name="questionText"
+                      required><%= editing
+                        ? question.getQuestionText()
+                        : "" %></textarea>
 
-                </div>
+            <label>Question Type *</label>
 
-                <div class="form-group">
+            <select name="questionType">
 
-                    <label>Question Type *</label>
+                <option value="MCQ"
+                    <%= editing && "MCQ".equals(question.getQuestionType())
+                            ? "selected" : "" %>>
+                    MCQ
+                </option>
 
-                    <select name="questionType"
-                            id="questionType"
-                            required
-                            onchange="showQuestionOptions()">
+                <option value="TRUE_FALSE"
+                    <%= editing && "TRUE_FALSE".equals(question.getQuestionType())
+                            ? "selected" : "" %>>
+                    True / False
+                </option>
 
-                        <option value="">Select Type</option>
+                <option value="SHORT_ANSWER"
+                    <%= editing && "SHORT_ANSWER".equals(question.getQuestionType())
+                            ? "selected" : "" %>>
+                    Short Answer
+                </option>
 
-                        <option value="MCQ"
-                            <%= editing && "MCQ".equals(question.getQuestionType()) ? "selected" : "" %>>
-                            Multiple Choice
-                        </option>
+                <option value="LONG_ANSWER"
+                    <%= editing && "LONG_ANSWER".equals(question.getQuestionType())
+                            ? "selected" : "" %>>
+                    Long Answer
+                </option>
 
-                        <option value="TRUE_FALSE"
-                            <%= editing && "TRUE_FALSE".equals(question.getQuestionType()) ? "selected" : "" %>>
-                            True / False
-                        </option>
+                <option value="CODING"
+                    <%= editing && "CODING".equals(question.getQuestionType())
+                            ? "selected" : "" %>>
+                    Coding
+                </option>
 
-                        <option value="SHORT_ANSWER"
-                            <%= editing && "SHORT_ANSWER".equals(question.getQuestionType()) ? "selected" : "" %>>
-                            Short Answer
-                        </option>
+            </select>
 
-                        <option value="LONG_ANSWER"
-                            <%= editing && "LONG_ANSWER".equals(question.getQuestionType()) ? "selected" : "" %>>
-                            Long Answer
-                        </option>
+            <label>Difficulty</label>
 
-                        <option value="CODING"
-                            <%= editing && "CODING".equals(question.getQuestionType()) ? "selected" : "" %>>
-                            Coding
-                        </option>
+            <select name="difficulty">
 
-                    </select>
+                <option value="EASY"
+                    <%= editing && "EASY".equals(question.getDifficulty())
+                            ? "selected" : "" %>>
+                    Easy
+                </option>
 
-                </div>
+                <option value="MEDIUM"
+                    <%= !editing ||
+                        "MEDIUM".equals(question.getDifficulty())
+                            ? "selected" : "" %>>
+                    Medium
+                </option>
 
-                <div class="form-group">
+                <option value="HARD"
+                    <%= editing && "HARD".equals(question.getDifficulty())
+                            ? "selected" : "" %>>
+                    Hard
+                </option>
 
-                    <label>Difficulty *</label>
+            </select>
 
-                    <select name="difficulty" required>
+            <label>Default Marks</label>
 
-                        <option value="EASY"
-                            <%= editing && "EASY".equals(question.getDifficulty()) ? "selected" : "" %>>
-                            Easy
-                        </option>
+            <input type="number"
+                   name="defaultMarks"
+                   step="0.01"
+                   min="0.01"
+                   value="<%= editing
+                            ? question.getDefaultMarks()
+                            : "1" %>">
 
-                        <option value="MEDIUM"
-                            <%= !editing || "MEDIUM".equals(question.getDifficulty()) ? "selected" : "" %>>
-                            Medium
-                        </option>
+            <label>Negative Marks</label>
 
-                        <option value="HARD"
-                            <%= editing && "HARD".equals(question.getDifficulty()) ? "selected" : "" %>>
-                            Hard
-                        </option>
+            <input type="number"
+                   name="negativeMarks"
+                   step="0.01"
+                   min="0"
+                   value="<%= editing
+                            ? question.getNegativeMarks()
+                            : "0" %>">
 
-                    </select>
+            <label>Explanation</label>
 
-                </div>
+            <textarea name="explanation"><%= editing &&
+                    question.getExplanation() != null
+                        ? question.getExplanation()
+                        : "" %></textarea>
 
-                <div class="form-group">
+            <button type="submit">
 
-                    <label>Default Marks *</label>
-
-                    <input type="number"
-                           name="defaultMarks"
-                           min="0.01"
-                           step="0.01"
-                           required
-                           value="<%= editing ? question.getDefaultMarks() : "1.00" %>">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Negative Marks</label>
-
-                    <input type="number"
-                           name="negativeMarks"
-                           min="0"
-                           step="0.01"
-                           value="<%= editing ? question.getNegativeMarks() : "0.00" %>">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Status</label>
-
-                    <select name="status">
-
-                        <option value="ACTIVE"
-                            <%= !editing || "ACTIVE".equals(question.getStatus())
-                                ? "selected" : "" %>>
-                            Active
-                        </option>
-
-                        <option value="INACTIVE"
-                            <%= editing && "INACTIVE".equals(question.getStatus())
-                                ? "selected" : "" %>>
-                            Inactive
-                        </option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Question *</label>
-
-                <textarea name="questionText"
-                          rows="8"
-                          required
-                          placeholder="Enter question..."><%= editing ? question.getQuestionText() : "" %></textarea>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Explanation</label>
-
-                <textarea name="explanation"
-                          rows="5"
-                          placeholder="Explain the correct answer..."><%= editing && question.getExplanation() != null
-                                ? question.getExplanation()
-                                : "" %></textarea>
-
-            </div>
-
-            <div id="optionNotice"
-                 class="alert alert-info">
-
-                MCQ and True/False questions require answer options.
-                Save the question first, then manage options.
-
-            </div>
-
-            <button type="submit"
-                    class="btn btn-primary">
-
-                <%= editing ? "Update Question" : "Create Question" %>
+                <%= editing
+                        ? "Update Question"
+                        : "Create Question" %>
 
             </button>
 
@@ -240,30 +211,6 @@
     </div>
 
 </div>
-
-<script>
-
-function showQuestionOptions() {
-
-    const type =
-        document.getElementById("questionType").value;
-
-    const notice =
-        document.getElementById("optionNotice");
-
-    if (type === "MCQ" || type === "TRUE_FALSE") {
-
-        notice.style.display = "block";
-
-    } else {
-
-        notice.style.display = "none";
-    }
-}
-
-showQuestionOptions();
-
-</script>
 
 </body>
 </html>

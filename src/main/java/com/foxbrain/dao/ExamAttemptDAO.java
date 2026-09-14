@@ -9,49 +9,31 @@ import java.util.List;
 
 public class ExamAttemptDAO {
 
-    public long create(ExamAttempt attempt) throws SQLException {
+    public long create(ExamAttempt attempt)
+            throws SQLException {
 
         String sql =
-                "INSERT INTO exam_attempts (" +
-                "exam_id, student_id, attempt_number, started_at, " +
-                "auto_submitted, status, total_marks" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "INSERT INTO exam_attempts " +
+                "(exam_id, student_id, attempt_number, started_at, status) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(
-                     sql,
-                     Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps =
+                     con.prepareStatement(sql,
+                             Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, attempt.getExamId());
             ps.setLong(2, attempt.getStudentId());
             ps.setInt(3, attempt.getAttemptNumber());
 
-            if (attempt.getStartedAt() != null) {
-                ps.setTimestamp(
-                        4,
-                        Timestamp.valueOf(attempt.getStartedAt())
-                );
-            } else {
-                ps.setTimestamp(
-                        4,
-                        new Timestamp(System.currentTimeMillis())
-                );
-            }
+            ps.setTimestamp(4, attempt.getStartedAt());
 
-            ps.setBoolean(5, attempt.isAutoSubmitted());
-            ps.setString(6, attempt.getStatus());
+            ps.setString(5,
+                    attempt.getStatus() == null
+                            ? "IN_PROGRESS"
+                            : attempt.getStatus());
 
-            if (attempt.getTotalMarks() != null) {
-                ps.setBigDecimal(7, attempt.getTotalMarks());
-            } else {
-                ps.setNull(7, Types.DECIMAL);
-            }
-
-            int affected = ps.executeUpdate();
-
-            if (affected == 0) {
-                throw new SQLException("Creating exam attempt failed.");
-            }
+            ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
 
@@ -61,24 +43,20 @@ public class ExamAttemptDAO {
             }
         }
 
-        throw new SQLException(
-                "Creating exam attempt failed. No ID returned."
-        );
+        return 0;
     }
 
-    public ExamAttempt getById(long id) throws SQLException {
+    public ExamAttempt getById(long id)
+            throws SQLException {
 
         String sql =
                 "SELECT ea.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
-                "s.admission_number " +
+                "s.first_name, s.last_name, s.admission_number " +
                 "FROM exam_attempts ea " +
-                "INNER JOIN exams e ON ea.exam_id = e.id " +
-                "INNER JOIN students s ON ea.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE ea.id = ?";
+                "INNER JOIN exams e ON ea.exam_id=e.id " +
+                "INNER JOIN students s ON ea.student_id=s.id " +
+                "WHERE ea.id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -99,20 +77,17 @@ public class ExamAttemptDAO {
     public List<ExamAttempt> getByExamId(long examId)
             throws SQLException {
 
-        List<ExamAttempt> attempts = new ArrayList<>();
-
         String sql =
                 "SELECT ea.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
-                "s.admission_number " +
+                "s.first_name, s.last_name, s.admission_number " +
                 "FROM exam_attempts ea " +
-                "INNER JOIN exams e ON ea.exam_id = e.id " +
-                "INNER JOIN students s ON ea.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE ea.exam_id = ? " +
-                "ORDER BY ea.started_at DESC";
+                "INNER JOIN exams e ON ea.exam_id=e.id " +
+                "INNER JOIN students s ON ea.student_id=s.id " +
+                "WHERE ea.exam_id=? " +
+                "ORDER BY ea.id DESC";
+
+        List<ExamAttempt> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -122,31 +97,28 @@ public class ExamAttemptDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    attempts.add(mapRow(rs));
+                    list.add(mapRow(rs));
                 }
             }
         }
 
-        return attempts;
+        return list;
     }
 
     public List<ExamAttempt> getByStudentId(long studentId)
             throws SQLException {
 
-        List<ExamAttempt> attempts = new ArrayList<>();
-
         String sql =
                 "SELECT ea.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
-                "s.admission_number " +
+                "s.first_name, s.last_name, s.admission_number " +
                 "FROM exam_attempts ea " +
-                "INNER JOIN exams e ON ea.exam_id = e.id " +
-                "INNER JOIN students s ON ea.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE ea.student_id = ? " +
-                "ORDER BY ea.started_at DESC";
+                "INNER JOIN exams e ON ea.exam_id=e.id " +
+                "INNER JOIN students s ON ea.student_id=s.id " +
+                "WHERE ea.student_id=? " +
+                "ORDER BY ea.id DESC";
+
+        List<ExamAttempt> list = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -156,31 +128,29 @@ public class ExamAttemptDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-                    attempts.add(mapRow(rs));
+                    list.add(mapRow(rs));
                 }
             }
         }
 
-        return attempts;
+        return list;
     }
 
     public ExamAttempt getActiveAttempt(
             long examId,
-            long studentId) throws SQLException {
+            long studentId)
+            throws SQLException {
 
         String sql =
                 "SELECT ea.*, " +
                 "e.title AS exam_title, " +
-                "CONCAT(COALESCE(u.first_name,''), ' ', " +
-                "COALESCE(u.last_name,'')) AS student_name, " +
-                "s.admission_number " +
+                "s.first_name, s.last_name, s.admission_number " +
                 "FROM exam_attempts ea " +
-                "INNER JOIN exams e ON ea.exam_id = e.id " +
-                "INNER JOIN students s ON ea.student_id = s.id " +
-                "LEFT JOIN users u ON s.user_id = u.id " +
-                "WHERE ea.exam_id = ? " +
-                "AND ea.student_id = ? " +
-                "AND ea.status = 'IN_PROGRESS' " +
+                "INNER JOIN exams e ON ea.exam_id=e.id " +
+                "INNER JOIN students s ON ea.student_id=s.id " +
+                "WHERE ea.exam_id=? " +
+                "AND ea.student_id=? " +
+                "AND ea.status='IN_PROGRESS' " +
                 "ORDER BY ea.id DESC " +
                 "LIMIT 1";
 
@@ -203,12 +173,13 @@ public class ExamAttemptDAO {
 
     public int getNextAttemptNumber(
             long examId,
-            long studentId) throws SQLException {
+            long studentId)
+            throws SQLException {
 
         String sql =
-                "SELECT COALESCE(MAX(attempt_number), 0) + 1 " +
+                "SELECT COALESCE(MAX(attempt_number),0)+1 " +
                 "FROM exam_attempts " +
-                "WHERE exam_id = ? AND student_id = ?";
+                "WHERE exam_id=? AND student_id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -228,144 +199,140 @@ public class ExamAttemptDAO {
     }
 
     public boolean submit(
-            long attemptId,
-            boolean autoSubmitted) throws SQLException {
+            long id,
+            boolean autoSubmitted)
+            throws SQLException {
 
         String sql =
                 "UPDATE exam_attempts SET " +
-                "submitted_at = CURRENT_TIMESTAMP, " +
-                "auto_submitted = ?, " +
-                "status = 'SUBMITTED' " +
-                "WHERE id = ? " +
-                "AND status = 'IN_PROGRESS'";
+                "submitted_at=NOW(), " +
+                "auto_submitted=?, " +
+                "status='SUBMITTED' " +
+                "WHERE id=? " +
+                "AND status='IN_PROGRESS'";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setBoolean(1, autoSubmitted);
-            ps.setLong(2, attemptId);
+            ps.setLong(2, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
     public boolean updateStatus(
-            long attemptId,
-            String status) throws SQLException {
+            long id,
+            String status)
+            throws SQLException {
 
         String sql =
                 "UPDATE exam_attempts " +
-                "SET status = ? " +
-                "WHERE id = ?";
+                "SET status=? " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, status);
-            ps.setLong(2, attemptId);
+            ps.setLong(2, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
     public boolean updateMarks(
-            long attemptId,
-            java.math.BigDecimal totalMarks,
-            java.math.BigDecimal obtainedMarks)
+            long id,
+            double totalMarks,
+            double obtainedMarks)
             throws SQLException {
 
         String sql =
                 "UPDATE exam_attempts SET " +
-                "total_marks = ?, " +
-                "obtained_marks = ?, " +
-                "status = 'EVALUATED' " +
-                "WHERE id = ?";
+                "total_marks=?, obtained_marks=? " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setBigDecimal(1, totalMarks);
-            ps.setBigDecimal(2, obtainedMarks);
-            ps.setLong(3, attemptId);
+            ps.setDouble(1, totalMarks);
+            ps.setDouble(2, obtainedMarks);
+            ps.setLong(3, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
-    public boolean abandon(long attemptId) throws SQLException {
+    public boolean abandon(long id)
+            throws SQLException {
 
-        String sql =
-                "UPDATE exam_attempts " +
-                "SET status = 'ABANDONED' " +
-                "WHERE id = ? " +
-                "AND status = 'IN_PROGRESS'";
-
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setLong(1, attemptId);
-
-            return ps.executeUpdate() > 0;
-        }
+        return updateStatus(
+                id,
+                "ABANDONED");
     }
 
     private ExamAttempt mapRow(ResultSet rs)
             throws SQLException {
 
-        ExamAttempt attempt = new ExamAttempt();
+        ExamAttempt a = new ExamAttempt();
 
-        attempt.setId(rs.getLong("id"));
-        attempt.setExamId(rs.getLong("exam_id"));
-        attempt.setStudentId(rs.getLong("student_id"));
+        a.setId(rs.getLong("id"));
+        a.setExamId(rs.getLong("exam_id"));
+        a.setStudentId(rs.getLong("student_id"));
 
-        attempt.setExamTitle(
-                rs.getString("exam_title")
-        );
+        a.setAttemptNumber(
+                rs.getInt("attempt_number"));
 
-        attempt.setStudentName(
-                rs.getString("student_name")
-        );
+        a.setStartedAt(
+                rs.getTimestamp("started_at"));
 
-        attempt.setAdmissionNumber(
-                rs.getString("admission_number")
-        );
+        a.setSubmittedAt(
+                rs.getTimestamp("submitted_at"));
 
-        attempt.setAttemptNumber(
-                rs.getInt("attempt_number")
-        );
+        a.setAutoSubmitted(
+                rs.getBoolean("auto_submitted"));
 
-        Timestamp startedAt = rs.getTimestamp("started_at");
+        a.setStatus(
+                rs.getString("status"));
 
-        if (startedAt != null) {
-            attempt.setStartedAt(
-                    startedAt.toLocalDateTime()
-            );
-        }
+        double total = rs.getDouble("total_marks");
+        if (rs.wasNull())
+            a.setTotalMarks(null);
+        else
+            a.setTotalMarks(total);
 
-        Timestamp submittedAt = rs.getTimestamp("submitted_at");
+        double obtained =
+                rs.getDouble("obtained_marks");
 
-        if (submittedAt != null) {
-            attempt.setSubmittedAt(
-                    submittedAt.toLocalDateTime()
-            );
-        }
+        if (rs.wasNull())
+            a.setObtainedMarks(null);
+        else
+            a.setObtainedMarks(obtained);
 
-        attempt.setAutoSubmitted(
-                rs.getBoolean("auto_submitted")
-        );
+        a.setExamTitle(
+                rs.getString("exam_title"));
 
-        attempt.setStatus(
-                rs.getString("status")
-        );
+        String first =
+                rs.getString("first_name");
 
-        attempt.setTotalMarks(
-                rs.getBigDecimal("total_marks")
-        );
+        String last =
+                rs.getString("last_name");
 
-        attempt.setObtainedMarks(
-                rs.getBigDecimal("obtained_marks")
-        );
+        String name =
+                ((first == null ? "" : first) + " " +
+                 (last == null ? "" : last)).trim();
 
-        return attempt;
+        a.setStudentName(name);
+
+        a.setAdmissionNumber(
+                rs.getString("admission_number"));
+
+        a.setCreatedAt(
+                rs.getTimestamp("created_at"));
+
+        a.setUpdatedAt(
+                rs.getTimestamp("updated_at"));
+
+        return a;
     }
 }

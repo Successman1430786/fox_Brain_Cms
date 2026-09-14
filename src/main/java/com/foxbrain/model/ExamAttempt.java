@@ -1,7 +1,6 @@
 package com.foxbrain.model;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public class ExamAttempt {
 
@@ -9,22 +8,25 @@ public class ExamAttempt {
     private long examId;
     private long studentId;
 
-    // Display fields from JOIN
-    private String examTitle;
-    private String studentName;
-    private String admissionNumber;
-
     private int attemptNumber;
 
-    private LocalDateTime startedAt;
-    private LocalDateTime submittedAt;
+    private Timestamp startedAt;
+    private Timestamp submittedAt;
 
     private boolean autoSubmitted;
 
     private String status;
 
-    private BigDecimal totalMarks;
-    private BigDecimal obtainedMarks;
+    private Double totalMarks;
+    private Double obtainedMarks;
+
+    private String examTitle;
+
+    private String studentName;
+    private String admissionNumber;
+
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public ExamAttempt() {
     }
@@ -53,6 +55,62 @@ public class ExamAttempt {
         this.studentId = studentId;
     }
 
+    public int getAttemptNumber() {
+        return attemptNumber;
+    }
+
+    public void setAttemptNumber(int attemptNumber) {
+        this.attemptNumber = attemptNumber;
+    }
+
+    public Timestamp getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(Timestamp startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public Timestamp getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(Timestamp submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+
+    public boolean isAutoSubmitted() {
+        return autoSubmitted;
+    }
+
+    public void setAutoSubmitted(boolean autoSubmitted) {
+        this.autoSubmitted = autoSubmitted;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Double getTotalMarks() {
+        return totalMarks;
+    }
+
+    public void setTotalMarks(Double totalMarks) {
+        this.totalMarks = totalMarks;
+    }
+
+    public Double getObtainedMarks() {
+        return obtainedMarks;
+    }
+
+    public void setObtainedMarks(Double obtainedMarks) {
+        this.obtainedMarks = obtainedMarks;
+    }
+
     public String getExamTitle() {
         return examTitle;
     }
@@ -77,59 +135,19 @@ public class ExamAttempt {
         this.admissionNumber = admissionNumber;
     }
 
-    public int getAttemptNumber() {
-        return attemptNumber;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setAttemptNumber(int attemptNumber) {
-        this.attemptNumber = attemptNumber;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public LocalDateTime getStartedAt() {
-        return startedAt;
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setStartedAt(LocalDateTime startedAt) {
-        this.startedAt = startedAt;
-    }
-
-    public LocalDateTime getSubmittedAt() {
-        return submittedAt;
-    }
-
-    public void setSubmittedAt(LocalDateTime submittedAt) {
-        this.submittedAt = submittedAt;
-    }
-
-    public boolean isAutoSubmitted() {
-        return autoSubmitted;
-    }
-
-    public void setAutoSubmitted(boolean autoSubmitted) {
-        this.autoSubmitted = autoSubmitted;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public BigDecimal getTotalMarks() {
-        return totalMarks;
-    }
-
-    public void setTotalMarks(BigDecimal totalMarks) {
-        this.totalMarks = totalMarks;
-    }
-
-    public BigDecimal getObtainedMarks() {
-        return obtainedMarks;
-    }
-
-    public void setObtainedMarks(BigDecimal obtainedMarks) {
-        this.obtainedMarks = obtainedMarks;
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

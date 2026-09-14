@@ -12,22 +12,22 @@ public class QuestionDAO {
 
     public List<Question> getAll() throws SQLException {
 
-        List<Question> questions = new ArrayList<>();
-
         String sql =
-                "SELECT q.*, c.name AS course_name " +
+                "SELECT q.*, c.course_name " +
                 "FROM question_bank q " +
-                "LEFT JOIN courses c ON q.course_id = c.id " +
-                "ORDER BY q.created_at DESC";
+                "LEFT JOIN courses c ON q.course_id=c.id " +
+                "ORDER BY q.id DESC";
+
+        List<Question> questions = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Question question = mapRow(rs);
-                question.setOptions(getOptions(con, question.getId()));
-                questions.add(question);
+                Question q = mapRow(rs);
+                q.setOptions(getOptions(q.getId()));
+                questions.add(q);
             }
         }
 
@@ -37,10 +37,10 @@ public class QuestionDAO {
     public Question getById(long id) throws SQLException {
 
         String sql =
-                "SELECT q.*, c.name AS course_name " +
+                "SELECT q.*, c.course_name " +
                 "FROM question_bank q " +
-                "LEFT JOIN courses c ON q.course_id = c.id " +
-                "WHERE q.id = ?";
+                "LEFT JOIN courses c ON q.course_id=c.id " +
+                "WHERE q.id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -51,10 +51,10 @@ public class QuestionDAO {
 
                 if (rs.next()) {
 
-                    Question question = mapRow(rs);
-                    question.setOptions(getOptions(con, id));
+                    Question q = mapRow(rs);
+                    q.setOptions(getOptions(q.getId()));
 
-                    return question;
+                    return q;
                 }
             }
         }
@@ -62,85 +62,73 @@ public class QuestionDAO {
         return null;
     }
 
-    public long create(Question question) throws SQLException {
+    public long create(Question q) throws SQLException {
 
         String sql =
-                "INSERT INTO question_bank (" +
-                "course_id, question_text, question_type, difficulty, " +
-                "default_marks, negative_marks, explanation, status" +
-                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                "INSERT INTO question_bank " +
+                "(course_id, question_text, question_type, difficulty, " +
+                "default_marks, negative_marks, explanation, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(
-                     sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps =
+                     con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            if (question.getCourseId() != null) {
-                ps.setLong(1, question.getCourseId());
-            } else {
+            if (q.getCourseId() != null)
+                ps.setLong(1, q.getCourseId());
+            else
                 ps.setNull(1, Types.BIGINT);
-            }
 
-            ps.setString(2, question.getQuestionText());
-            ps.setString(3, question.getQuestionType());
-            ps.setString(4, question.getDifficulty());
+            ps.setString(2, q.getQuestionText());
+            ps.setString(3, q.getQuestionType());
+            ps.setString(4, q.getDifficulty());
 
-            ps.setBigDecimal(5, question.getDefaultMarks());
-            ps.setBigDecimal(6, question.getNegativeMarks());
+            ps.setDouble(5, q.getDefaultMarks());
+            ps.setDouble(6, q.getNegativeMarks());
 
-            ps.setString(7, question.getExplanation());
-            ps.setString(8, question.getStatus());
+            ps.setString(7, q.getExplanation());
+            ps.setString(8, q.getStatus());
 
-            int affected = ps.executeUpdate();
-
-            if (affected == 0) {
-                throw new SQLException("Creating question failed.");
-            }
+            ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
-
                 if (keys.next()) {
                     return keys.getLong(1);
                 }
             }
         }
 
-        throw new SQLException("Creating question failed. No ID returned.");
+        return 0;
     }
 
-    public boolean update(Question question) throws SQLException {
+    public boolean update(Question q) throws SQLException {
 
         String sql =
                 "UPDATE question_bank SET " +
-                "course_id = ?, " +
-                "question_text = ?, " +
-                "question_type = ?, " +
-                "difficulty = ?, " +
-                "default_marks = ?, " +
-                "negative_marks = ?, " +
-                "explanation = ?, " +
-                "status = ? " +
-                "WHERE id = ?";
+                "course_id=?, question_text=?, question_type=?, " +
+                "difficulty=?, default_marks=?, negative_marks=?, " +
+                "explanation=?, status=? " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            if (question.getCourseId() != null) {
-                ps.setLong(1, question.getCourseId());
-            } else {
+            if (q.getCourseId() != null)
+                ps.setLong(1, q.getCourseId());
+            else
                 ps.setNull(1, Types.BIGINT);
-            }
 
-            ps.setString(2, question.getQuestionText());
-            ps.setString(3, question.getQuestionType());
-            ps.setString(4, question.getDifficulty());
+            ps.setString(2, q.getQuestionText());
+            ps.setString(3, q.getQuestionType());
+            ps.setString(4, q.getDifficulty());
 
-            ps.setBigDecimal(5, question.getDefaultMarks());
-            ps.setBigDecimal(6, question.getNegativeMarks());
+            ps.setDouble(5, q.getDefaultMarks());
+            ps.setDouble(6, q.getNegativeMarks());
 
-            ps.setString(7, question.getExplanation());
-            ps.setString(8, question.getStatus());
+            ps.setString(7, q.getExplanation());
+            ps.setString(8, q.getStatus());
 
-            ps.setLong(9, question.getId());
+            ps.setLong(9, q.getId());
 
             return ps.executeUpdate() > 0;
         }
@@ -150,8 +138,8 @@ public class QuestionDAO {
 
         String sql =
                 "UPDATE question_bank " +
-                "SET status = 'INACTIVE' " +
-                "WHERE id = ?";
+                "SET status='INACTIVE' " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -162,33 +150,41 @@ public class QuestionDAO {
         }
     }
 
-    public boolean addOption(QuestionOption option) throws SQLException {
+    public long addOption(QuestionOption option) throws SQLException {
 
         String sql =
-                "INSERT INTO question_options (" +
-                "question_id, option_text, option_order, is_correct" +
-                ") VALUES (?, ?, ?, ?)";
+                "INSERT INTO question_options " +
+                "(question_id, option_text, option_order, is_correct) " +
+                "VALUES (?, ?, ?, ?)";
 
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps =
+                     con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setLong(1, option.getQuestionId());
             ps.setString(2, option.getOptionText());
             ps.setInt(3, option.getOptionOrder());
             ps.setBoolean(4, option.isCorrect());
 
-            return ps.executeUpdate() > 0;
+            ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+
+                if (keys.next()) {
+                    return keys.getLong(1);
+                }
+            }
         }
+
+        return 0;
     }
 
     public boolean updateOption(QuestionOption option) throws SQLException {
 
         String sql =
                 "UPDATE question_options SET " +
-                "option_text = ?, " +
-                "option_order = ?, " +
-                "is_correct = ? " +
-                "WHERE id = ?";
+                "option_text=?, option_order=?, is_correct=? " +
+                "WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -202,39 +198,31 @@ public class QuestionDAO {
         }
     }
 
-    public boolean deleteOption(long optionId) throws SQLException {
+    public boolean deleteOption(long id) throws SQLException {
 
-        String sql =
-                "DELETE FROM question_options WHERE id = ?";
+        String sql = "DELETE FROM question_options WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setLong(1, optionId);
+            ps.setLong(1, id);
 
             return ps.executeUpdate() > 0;
         }
     }
 
-    public List<QuestionOption> getOptions(long questionId) throws SQLException {
-
-        try (Connection con = DBConnection.getConnection()) {
-            return getOptions(con, questionId);
-        }
-    }
-
-    private List<QuestionOption> getOptions(
-            Connection con,
-            long questionId) throws SQLException {
-
-        List<QuestionOption> options = new ArrayList<>();
+    public List<QuestionOption> getOptions(long questionId)
+            throws SQLException {
 
         String sql =
                 "SELECT * FROM question_options " +
-                "WHERE question_id = ? " +
+                "WHERE question_id=? " +
                 "ORDER BY option_order ASC, id ASC";
 
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
+        List<QuestionOption> options = new ArrayList<>();
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setLong(1, questionId);
 
@@ -245,10 +233,20 @@ public class QuestionDAO {
                     QuestionOption option = new QuestionOption();
 
                     option.setId(rs.getLong("id"));
-                    option.setQuestionId(rs.getLong("question_id"));
-                    option.setOptionText(rs.getString("option_text"));
-                    option.setOptionOrder(rs.getInt("option_order"));
-                    option.setCorrect(rs.getBoolean("is_correct"));
+                    option.setQuestionId(
+                            rs.getLong("question_id"));
+
+                    option.setOptionText(
+                            rs.getString("option_text"));
+
+                    option.setOptionOrder(
+                            rs.getInt("option_order"));
+
+                    option.setCorrect(
+                            rs.getBoolean("is_correct"));
+
+                    option.setCreatedAt(
+                            rs.getTimestamp("created_at"));
 
                     options.add(option);
                 }
@@ -258,17 +256,17 @@ public class QuestionDAO {
         return options;
     }
 
-    public List<Question> getByCourseId(long courseId) throws SQLException {
-
-        List<Question> questions = new ArrayList<>();
+    public List<Question> getByCourseId(long courseId)
+            throws SQLException {
 
         String sql =
-                "SELECT q.*, c.name AS course_name " +
+                "SELECT q.*, c.course_name " +
                 "FROM question_bank q " +
-                "LEFT JOIN courses c ON q.course_id = c.id " +
-                "WHERE q.course_id = ? " +
-                "AND q.status = 'ACTIVE' " +
-                "ORDER BY q.created_at DESC";
+                "LEFT JOIN courses c ON q.course_id=c.id " +
+                "WHERE q.course_id=? " +
+                "ORDER BY q.id DESC";
+
+        List<Question> questions = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -278,14 +276,7 @@ public class QuestionDAO {
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-
-                    Question question = mapRow(rs);
-
-                    question.setOptions(
-                            getOptions(con, question.getId())
-                    );
-
-                    questions.add(question);
+                    questions.add(mapRow(rs));
                 }
             }
         }
@@ -293,35 +284,27 @@ public class QuestionDAO {
         return questions;
     }
 
-    public List<Question> getByType(String questionType)
+    public List<Question> getByType(String type)
             throws SQLException {
 
-        List<Question> questions = new ArrayList<>();
-
         String sql =
-                "SELECT q.*, c.name AS course_name " +
+                "SELECT q.*, c.course_name " +
                 "FROM question_bank q " +
-                "LEFT JOIN courses c ON q.course_id = c.id " +
-                "WHERE q.question_type = ? " +
-                "AND q.status = 'ACTIVE' " +
-                "ORDER BY q.created_at DESC";
+                "LEFT JOIN courses c ON q.course_id=c.id " +
+                "WHERE q.question_type=? " +
+                "ORDER BY q.id DESC";
+
+        List<Question> questions = new ArrayList<>();
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, questionType);
+            ps.setString(1, type);
 
             try (ResultSet rs = ps.executeQuery()) {
 
                 while (rs.next()) {
-
-                    Question question = mapRow(rs);
-
-                    question.setOptions(
-                            getOptions(con, question.getId())
-                    );
-
-                    questions.add(question);
+                    questions.add(mapRow(rs));
                 }
             }
         }
@@ -329,42 +312,45 @@ public class QuestionDAO {
         return questions;
     }
 
-    private Question mapRow(ResultSet rs) throws SQLException {
+    private Question mapRow(ResultSet rs)
+            throws SQLException {
 
-        Question question = new Question();
+        Question q = new Question();
 
-        question.setId(rs.getLong("id"));
+        q.setId(rs.getLong("id"));
 
         long courseId = rs.getLong("course_id");
 
-        if (!rs.wasNull()) {
-            question.setCourseId(courseId);
+        if (rs.wasNull()) {
+            q.setCourseId(null);
+        } else {
+            q.setCourseId(courseId);
         }
 
-        question.setQuestionText(rs.getString("question_text"));
-        question.setQuestionType(rs.getString("question_type"));
-        question.setDifficulty(rs.getString("difficulty"));
+        q.setQuestionText(
+                rs.getString("question_text"));
 
-        question.setDefaultMarks(
-                rs.getBigDecimal("default_marks")
-        );
+        q.setQuestionType(
+                rs.getString("question_type"));
 
-        question.setNegativeMarks(
-                rs.getBigDecimal("negative_marks")
-        );
+        q.setDifficulty(
+                rs.getString("difficulty"));
 
-        question.setExplanation(
-                rs.getString("explanation")
-        );
+        q.setDefaultMarks(
+                rs.getDouble("default_marks"));
 
-        question.setStatus(
-                rs.getString("status")
-        );
+        q.setNegativeMarks(
+                rs.getDouble("negative_marks"));
 
-        question.setCourseName(
-                rs.getString("course_name")
-        );
+        q.setExplanation(
+                rs.getString("explanation"));
 
-        return question;
+        q.setStatus(
+                rs.getString("status"));
+
+        q.setCourseName(
+                rs.getString("course_name"));
+
+        return q;
     }
 }

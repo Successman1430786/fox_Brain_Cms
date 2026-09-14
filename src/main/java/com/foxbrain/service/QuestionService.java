@@ -1,325 +1,341 @@
 package com.foxbrain.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import com.foxbrain.dao.QuestionDAO;
 import com.foxbrain.model.Question;
 import com.foxbrain.model.QuestionOption;
 
-import java.sql.*;
+import java.sql.SQLException;
+import java.util.List;
 
 public class QuestionService {
 
-    private final QuestionDAO questionDAO = new QuestionDAO();
+    private final QuestionDAO questionDAO;
+
+    public QuestionService() {
+        questionDAO = new QuestionDAO();
+    }
+
+    // =====================================================
+    // GET ALL QUESTIONS
+    // =====================================================
 
     public List<Question> getAllQuestions() {
-        return questionDAO.getAll();
+        try {
+            return questionDAO.getAll();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error loading questions", e);
+        }
     }
+
+    // =====================================================
+    // GET QUESTION BY ID
+    // =====================================================
 
     public Question getQuestionById(long id) {
 
-        if (id <= 0) {
-            return null;
-        }
+        validateId(id);
 
-        return questionDAO.getById(id);
+        try {
+            return questionDAO.getById(id);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to load question.",
+                    e
+            );
+        }
     }
 
-    public List<Question> getQuestionsByCourse(long courseId) {
+    // =====================================================
+    // CREATE QUESTION
+    // =====================================================
 
-        if (courseId <= 0) {
-            return List.of();
+    public long createQuestion(Question question) {
+
+        validateQuestion(question);
+
+        try {
+            return questionDAO.create(question);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to create question.",
+                    e
+            );
         }
-
-        return questionDAO.getByCourseId(courseId);
     }
 
-    public List<Question> getQuestionsByType(String type) {
+    // =====================================================
+    // UPDATE QUESTION
+    // =====================================================
 
-        if (type == null || type.trim().isEmpty()) {
-            return List.of();
-        }
-
-        return questionDAO.getByType(type.trim().toUpperCase());
-    }
-
-    public boolean createQuestion(Question question) {
-
-        if (!validateQuestion(question)) {
-            return false;
-        }
-
-        if (question.getStatus() == null ||
-            question.getStatus().trim().isEmpty()) {
-
-            question.setStatus("ACTIVE");
-        }
-
-        question.setStatus(question.getStatus().toUpperCase());
-
-        long id = questionDAO.create(question);
-
-        if (id <= 0) {
-            return false;
-        }
-
-        if (question.getOptions() != null) {
-
-            for (QuestionOption option : question.getOptions()) {
-
-                if (!validateOption(option)) {
-                    continue;
-                }
-
-                option.setQuestionId(id);
-
-                questionDAO.addOption(option);
-            }
-        }
-
-        return true;
-    }
-
-    public boolean updateQuestion(Question question) {
-
-        if (question == null || question.getId() <= 0) {
-            return false;
-        }
-
-        if (!validateQuestion(question)) {
-            return false;
-        }
-
-        if (question.getStatus() == null ||
-            question.getStatus().trim().isEmpty()) {
-
-            question.setStatus("ACTIVE");
-        }
-
-        question.setStatus(question.getStatus().toUpperCase());
-
-        if (!questionDAO.update(question)) {
-            return false;
-        }
-
-        if (question.getOptions() != null) {
-
-            for (QuestionOption option : question.getOptions()) {
-
-                if (!validateOption(option)) {
-                    continue;
-                }
-
-                option.setQuestionId(question.getId());
-
-                if (option.getId() > 0) {
-                    questionDAO.updateOption(option);
-                } else {
-                    questionDAO.addOption(option);
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public boolean deleteQuestion(long id) {
-
-        if (id <= 0) {
-            return false;
-        }
-
-        Question question = questionDAO.getById(id);
+    public void updateQuestion(Question question) {
 
         if (question == null) {
-            return false;
+            throw new IllegalArgumentException(
+                    "Question is required."
+            );
         }
 
-        /*
-         * DAO performs a soft delete by changing status to INACTIVE.
-         * This protects historical exam records.
-         */
-        return questionDAO.delete(id);
+        validateId(question.getId());
+        validateQuestion(question);
+
+        try {
+            questionDAO.update(question);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to update question.",
+                    e
+            );
+        }
     }
 
-    public boolean addOption(QuestionOption option) {
+    // =====================================================
+    // DELETE QUESTION
+    // =====================================================
 
-        if (!validateOption(option)) {
-            return false;
+    public void deleteQuestion(long id) {
+
+        validateId(id);
+
+        try {
+            questionDAO.delete(id);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to delete question.",
+                    e
+            );
         }
-
-        return questionDAO.addOption(option);
     }
 
-    public boolean updateOption(QuestionOption option) {
+    // =====================================================
+    // GET QUESTIONS BY COURSE
+    // =====================================================
 
-        if (option == null || option.getId() <= 0) {
-            return false;
+    public List<Question> getQuestionsByCourse(
+            long courseId) {
+
+        validateId(courseId);
+
+        try {
+            return questionDAO.getByCourseId(courseId);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to load course questions.",
+                    e
+            );
         }
-
-        if (!validateOption(option)) {
-            return false;
-        }
-
-        return questionDAO.updateOption(option);
     }
 
-    public boolean deleteOption(long optionId) {
+    // =====================================================
+    // GET QUESTIONS BY TYPE
+    // =====================================================
 
-        if (optionId <= 0) {
-            return false;
+    public List<Question> getQuestionsByType(
+            String questionType) {
+
+        if (questionType == null ||
+                questionType.trim().isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Question type is required."
+            );
         }
 
-        return questionDAO.deleteOption(optionId);
+        try {
+            return questionDAO.getByType(
+                    questionType
+            );
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to load questions.",
+                    e
+            );
+        }
     }
 
-    public List<QuestionOption> getOptions(long questionId) {
+    // =====================================================
+    // OPTIONS
+    // =====================================================
 
-        if (questionId <= 0) {
-            return List.of();
+    public List<QuestionOption> getOptions(
+            long questionId) {
+
+        validateId(questionId);
+
+        try {
+            return questionDAO.getOptions(
+                    questionId
+            );
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to load question options.",
+                    e
+            );
         }
-
-        return questionDAO.getOptions(questionId);
     }
 
-    private boolean validateQuestion(Question question) {
+    // =====================================================
+    // ADD OPTION
+    // =====================================================
 
-        if (question == null) {
-            return false;
-        }
-
-        if (question.getQuestionText() == null ||
-            question.getQuestionText().trim().isEmpty()) {
-
-            return false;
-        }
-
-        if (!isValidQuestionType(question.getQuestionType())) {
-            return false;
-        }
-
-        if (!isValidDifficulty(question.getDifficulty())) {
-            return false;
-        }
-
-        BigDecimal marks = question.getDefaultMarks();
-
-        if (marks == null || marks.compareTo(BigDecimal.ZERO) <= 0) {
-            return false;
-        }
-
-        BigDecimal negativeMarks = question.getNegativeMarks();
-
-        if (negativeMarks == null ||
-            negativeMarks.compareTo(BigDecimal.ZERO) < 0) {
-
-            return false;
-        }
-
-        if (question.getStatus() != null &&
-            !isValidStatus(question.getStatus())) {
-
-            return false;
-        }
-
-        return validateOptionsForType(question);
-    }
-
-    private boolean validateOptionsForType(Question question) {
-
-        String type = question.getQuestionType().toUpperCase();
-
-        if (type.equals("MCQ") ||
-            type.equals("TRUE_FALSE")) {
-
-            if (question.getOptions() == null ||
-                question.getOptions().isEmpty()) {
-
-                return false;
-            }
-
-            int correctCount = 0;
-
-            for (QuestionOption option : question.getOptions()) {
-
-                if (!validateOption(option)) {
-                    return false;
-                }
-
-                if (option.isCorrect()) {
-                    correctCount++;
-                }
-            }
-
-            if (type.equals("MCQ")) {
-                return correctCount >= 1;
-            }
-
-            if (type.equals("TRUE_FALSE")) {
-                return correctCount == 1;
-            }
-        }
-
-        return true;
-    }
-
-    private boolean validateOption(QuestionOption option) {
+    public long addOption(
+            QuestionOption option) {
 
         if (option == null) {
-            return false;
+            throw new IllegalArgumentException(
+                    "Option is required."
+            );
         }
 
-        if (option.getQuestionId() < 0) {
-            return false;
-        }
+        validateId(option.getQuestionId());
 
         if (option.getOptionText() == null ||
-            option.getOptionText().trim().isEmpty()) {
+                option.getOptionText()
+                        .trim()
+                        .isEmpty()) {
 
-            return false;
+            throw new IllegalArgumentException(
+                    "Option text is required."
+            );
         }
 
         if (option.getOptionOrder() <= 0) {
-            return false;
+            option.setOptionOrder(1);
         }
 
-        return true;
+        try {
+            return questionDAO.addOption(option);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to add question option.",
+                    e
+            );
+        }
     }
 
-    private boolean isValidQuestionType(String type) {
+    // =====================================================
+    // UPDATE OPTION
+    // =====================================================
 
-        if (type == null) {
-            return false;
+    public void updateOption(
+            QuestionOption option) {
+
+        if (option == null) {
+            throw new IllegalArgumentException(
+                    "Option is required."
+            );
         }
 
-        String value = type.toUpperCase();
+        validateId(option.getId());
+        validateId(option.getQuestionId());
 
-        return value.equals("MCQ")
-                || value.equals("TRUE_FALSE")
-                || value.equals("SHORT_ANSWER")
-                || value.equals("LONG_ANSWER")
-                || value.equals("CODING");
-    }
+        if (option.getOptionText() == null ||
+                option.getOptionText()
+                        .trim()
+                        .isEmpty()) {
 
-    private boolean isValidDifficulty(String difficulty) {
-
-        if (difficulty == null) {
-            return false;
+            throw new IllegalArgumentException(
+                    "Option text is required."
+            );
         }
 
-        String value = difficulty.toUpperCase();
+        try {
+            questionDAO.updateOption(option);
 
-        return value.equals("EASY")
-                || value.equals("MEDIUM")
-                || value.equals("HARD");
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to update question option.",
+                    e
+            );
+        }
     }
 
-    private boolean isValidStatus(String status) {
+    // =====================================================
+    // DELETE OPTION
+    // =====================================================
 
-        String value = status.toUpperCase();
+    public void deleteOption(long optionId) {
 
-        return value.equals("ACTIVE")
-                || value.equals("INACTIVE");
+        validateId(optionId);
+
+        try {
+            questionDAO.deleteOption(optionId);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Unable to delete question option.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // VALIDATION
+    // =====================================================
+
+    private void validateQuestion(
+            Question question) {
+
+        if (question == null) {
+            throw new IllegalArgumentException(
+                    "Question is required."
+            );
+        }
+
+        if (question.getQuestionText() == null ||
+                question.getQuestionText()
+                        .trim()
+                        .isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Question text is required."
+            );
+        }
+
+        if (question.getQuestionType() == null ||
+                question.getQuestionType()
+                        .trim()
+                        .isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "Question type is required."
+            );
+        }
+
+        if (question.getDifficulty() == null ||
+                question.getDifficulty()
+                        .trim()
+                        .isEmpty()) {
+
+            question.setDifficulty("MEDIUM");
+        }
+
+        if (question.getDefaultMarks() <= 0) {
+            throw new IllegalArgumentException(
+                    "Default marks must be greater than zero."
+            );
+        }
+
+        if (question.getNegativeMarks() < 0) {
+            throw new IllegalArgumentException(
+                    "Negative marks cannot be negative."
+            );
+        }
+    }
+
+    private void validateId(long id) {
+
+        if (id <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid ID."
+            );
+        }
     }
 }

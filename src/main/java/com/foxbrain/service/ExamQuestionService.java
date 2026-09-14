@@ -1,155 +1,254 @@
 package com.foxbrain.service;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import com.foxbrain.dao.ExamQuestionDAO;
 import com.foxbrain.model.ExamQuestion;
 
+import java.sql.SQLException;
+import java.util.List;
+
 public class ExamQuestionService {
 
-    private final ExamQuestionDAO examQuestionDAO = new ExamQuestionDAO();
+    private final ExamQuestionDAO examQuestionDAO;
 
-    public List<ExamQuestion> getQuestionsByExam(long examId) {
-
-        if (examId <= 0) {
-            return List.of();
-        }
-
-        return examQuestionDAO.getByExamId(examId);
+    public ExamQuestionService() {
+        this.examQuestionDAO = new ExamQuestionDAO();
     }
+
+    // =====================================================
+    // GET QUESTIONS OF EXAM
+    // =====================================================
+
+    public List<ExamQuestion> getQuestionsByExam(
+            long examId) {
+
+        validateId(examId);
+
+        try {
+            return examQuestionDAO.getByExamId(examId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load exam questions.",
+                    e
+            );
+        }
+    }
+
+    // =====================================================
+    // GET EXAM QUESTION
+    // =====================================================
 
     public ExamQuestion getById(long id) {
 
-        if (id <= 0) {
-            return null;
-        }
+        validateId(id);
 
-        return examQuestionDAO.getById(id);
+        try {
+            return examQuestionDAO.getById(id);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to load exam question.",
+                    e
+            );
+        }
     }
 
-    public boolean addQuestionToExam(ExamQuestion examQuestion) {
+    // =====================================================
+    // ADD QUESTION TO EXAM
+    // =====================================================
 
-        if (!validate(examQuestion)) {
-            return false;
+    public long addQuestion(
+            ExamQuestion examQuestion) {
+
+        if (examQuestion == null) {
+            throw new IllegalArgumentException(
+                    "Exam question cannot be null."
+            );
         }
 
-        if (examQuestionDAO.exists(
-                examQuestion.getExamId(),
-                examQuestion.getQuestionId())) {
+        validateId(examQuestion.getExamId());
+        validateId(examQuestion.getQuestionId());
 
-            return false;
+        if (examQuestion.getMarks() <= 0) {
+            throw new IllegalArgumentException(
+                    "Question marks must be greater than zero."
+            );
         }
 
-        if (examQuestion.getQuestionOrder() <= 0) {
-
-            examQuestion.setQuestionOrder(
-                    examQuestionDAO.getNextQuestionOrder(
-                            examQuestion.getExamId()));
+        if (examQuestion.getNegativeMarks() < 0) {
+            throw new IllegalArgumentException(
+                    "Negative marks cannot be negative."
+            );
         }
 
-        return examQuestionDAO.add(examQuestion);
+        try {
+
+            boolean exists =
+                    examQuestionDAO.exists(
+                            examQuestion.getExamId(),
+                            examQuestion.getQuestionId()
+                    );
+
+            if (exists) {
+                throw new IllegalArgumentException(
+                        "This question is already added to the exam."
+                );
+            }
+
+            if (examQuestion.getQuestionOrder() <= 0) {
+
+                int nextOrder =
+                        examQuestionDAO.getNextQuestionOrder(
+                                examQuestion.getExamId()
+                        );
+
+                examQuestion.setQuestionOrder(nextOrder);
+            }
+
+            return examQuestionDAO.add(examQuestion);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to add question to exam.",
+                    e
+            );
+        }
     }
 
-    public boolean updateExamQuestion(ExamQuestion examQuestion) {
+    // =====================================================
+    // UPDATE EXAM QUESTION
+    // =====================================================
 
-        if (examQuestion == null || examQuestion.getId() <= 0) {
-            return false;
+    public boolean updateQuestion(
+            ExamQuestion examQuestion) {
+
+        if (examQuestion == null) {
+            throw new IllegalArgumentException(
+                    "Exam question cannot be null."
+            );
         }
 
-        if (!validate(examQuestion)) {
-            return false;
+        validateId(examQuestion.getId());
+
+        if (examQuestion.getMarks() <= 0) {
+            throw new IllegalArgumentException(
+                    "Question marks must be greater than zero."
+            );
         }
 
-        return examQuestionDAO.update(examQuestion);
+        if (examQuestion.getNegativeMarks() < 0) {
+            throw new IllegalArgumentException(
+                    "Negative marks cannot be negative."
+            );
+        }
+
+        try {
+            return examQuestionDAO.update(
+                    examQuestion
+            );
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to update exam question.",
+                    e
+            );
+        }
     }
 
-    public boolean removeQuestionFromExam(long id) {
+    // =====================================================
+    // REMOVE QUESTION
+    // =====================================================
 
-        if (id <= 0) {
-            return false;
+    public boolean removeQuestion(long id) {
+
+        validateId(id);
+
+        try {
+            return examQuestionDAO.remove(id);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to remove question from exam.",
+                    e
+            );
         }
-
-        return examQuestionDAO.remove(id);
     }
+
+    // =====================================================
+    // REMOVE ALL QUESTIONS
+    // =====================================================
 
     public boolean removeAllQuestions(long examId) {
 
-        if (examId <= 0) {
-            return false;
-        }
+        validateId(examId);
 
-        return examQuestionDAO.removeByExamId(examId);
+        try {
+            return examQuestionDAO.removeByExamId(
+                    examId
+            );
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to remove exam questions.",
+                    e
+            );
+        }
     }
 
-    public boolean reorderQuestion(long examQuestionId,
-                                   int newOrder) {
+    // =====================================================
+    // CHANGE QUESTION ORDER
+    // =====================================================
 
-        if (examQuestionId <= 0 || newOrder <= 0) {
-            return false;
+    public boolean updateQuestionOrder(
+            long id,
+            int order) {
+
+        validateId(id);
+
+        if (order <= 0) {
+            throw new IllegalArgumentException(
+                    "Question order must be greater than zero."
+            );
         }
 
-        ExamQuestion question =
-                examQuestionDAO.getById(examQuestionId);
+        try {
+            return examQuestionDAO.updateQuestionOrder(
+                    id,
+                    order
+            );
 
-        if (question == null) {
-            return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "Unable to reorder question.",
+                    e
+            );
         }
-
-        return examQuestionDAO.reorder(
-                examQuestionId,
-                newOrder);
     }
 
-    public boolean updateQuestionOrder(long examQuestionId,
-                                       int questionOrder) {
+    // =====================================================
+    // VALIDATE ID
+    // =====================================================
 
-        if (examQuestionId <= 0 ||
-            questionOrder <= 0) {
+    private void validateId(long id) {
 
-            return false;
+        if (id <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid ID."
+            );
         }
-
-        return examQuestionDAO.updateQuestionOrder(
-                examQuestionId,
-                questionOrder);
-    }
-
-    private boolean validate(ExamQuestion examQuestion) {
-
-        if (examQuestion == null) {
-            return false;
-        }
-
-        if (examQuestion.getExamId() <= 0) {
-            return false;
-        }
-
-        if (examQuestion.getQuestionId() <= 0) {
-            return false;
-        }
-
-        BigDecimal marks = examQuestion.getMarks();
-
-        if (marks == null ||
-            marks.compareTo(BigDecimal.ZERO) <= 0) {
-
-            return false;
-        }
-
-        BigDecimal negativeMarks =
-                examQuestion.getNegativeMarks();
-
-        if (negativeMarks == null ||
-            negativeMarks.compareTo(BigDecimal.ZERO) < 0) {
-
-            return false;
-        }
-
-        if (examQuestion.getQuestionOrder() < 0) {
-            return false;
-        }
-
-        return true;
     }
 }

@@ -3,22 +3,63 @@
 <%@ page import="com.foxbrain.model.Question" %>
 
 <%
-    List<Question> questions =
-            (List<Question>) request.getAttribute("questions");
+    String contextPath = request.getContextPath();
 
-    String success = request.getParameter("success");
-    String error = request.getParameter("error");
+    List<Question> questions =
+            (List<Question>)
+                    request.getAttribute("questions");
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
-
+    <meta charset="UTF-8">
     <title>Question Bank - FoxBrain</title>
 
-    <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/assets/css/admin.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
 
+        .content {
+            padding: 30px;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+    </style>
 </head>
 
 <body>
@@ -26,137 +67,107 @@
 <%@ include file="/includes/admin-sidebar.jsp" %>
 <%@ include file="/includes/admin-header.jsp" %>
 
-<div class="admin-content">
+<div class="content">
 
-    <div class="page-header">
+    <div class="top">
 
         <div>
             <h1>Question Bank</h1>
-            <p>Create and manage reusable examination questions.</p>
+            <p>Manage reusable exam questions.</p>
         </div>
 
-        <a href="<%= request.getContextPath() %>/admin/exams/question-edit.jsp"
-           class="btn btn-primary">
+        <a class="btn"
+           href="<%= contextPath %>/admin/exams/question-edit.jsp">
             + Add Question
         </a>
 
     </div>
 
-    <% if (success != null) { %>
+    <div class="box">
 
-        <div class="alert alert-success">
-            Operation completed: <%= success %>
-        </div>
+        <table>
 
-    <% } %>
+            <thead>
 
-    <% if (error != null) { %>
+            <tr>
+                <th>ID</th>
+                <th>Question</th>
+                <th>Type</th>
+                <th>Difficulty</th>
+                <th>Marks</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
 
-        <div class="alert alert-danger">
-            <%= error %>
-        </div>
+            </thead>
 
-    <% } %>
+            <tbody>
 
-    <div class="card">
+            <% if (questions != null &&
+                   !questions.isEmpty()) {
 
-        <div class="table-responsive">
+                for (Question q : questions) {
+            %>
 
-            <table class="admin-table">
+            <tr>
 
-                <thead>
+                <td>
+                    <%= q.getId() %>
+                </td>
 
-                <tr>
-                    <th>ID</th>
-                    <th>Question</th>
-                    <th>Type</th>
-                    <th>Difficulty</th>
-                    <th>Marks</th>
-                    <th>Negative</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
+                <td>
+                    <%= q.getQuestionText() %>
+                </td>
 
-                </thead>
+                <td>
+                    <%= q.getQuestionType() %>
+                </td>
 
-                <tbody>
+                <td>
+                    <%= q.getDifficulty() %>
+                </td>
 
-                <% if (questions == null || questions.isEmpty()) { %>
+                <td>
+                    <%= q.getDefaultMarks() %>
+                </td>
 
-                    <tr>
-                        <td colspan="8" style="text-align:center;">
-                            No questions found.
-                        </td>
-                    </tr>
+                <td>
+                    <%= q.getStatus() %>
+                </td>
 
-                <% } else { %>
+                <td>
 
-                    <% for (Question q : questions) { %>
+                    <a href="<%= contextPath %>/admin/questions?action=view&id=<%= q.getId() %>">
+                        View
+                    </a>
 
-                        <tr>
+                    |
 
-                            <td><%= q.getId() %></td>
+                    <a href="<%= contextPath %>/admin/exams/question-edit.jsp?id=<%= q.getId() %>">
+                        Edit
+                    </a>
 
-                            <td>
-                                <%= q.getQuestionText() %>
-                            </td>
+                </td>
 
-                            <td>
-                                <%= q.getQuestionType() %>
-                            </td>
+            </tr>
 
-                            <td>
-                                <%= q.getDifficulty() %>
-                            </td>
+            <%
+                }
 
-                            <td>
-                                <%= q.getDefaultMarks() %>
-                            </td>
+            } else {
+            %>
 
-                            <td>
-                                <%= q.getNegativeMarks() %>
-                            </td>
+            <tr>
+                <td colspan="7">
+                    No questions found.
+                </td>
+            </tr>
 
-                            <td>
-                                <%= q.getStatus() %>
-                            </td>
+            <% } %>
 
-                            <td>
+            </tbody>
 
-                                <a class="btn btn-sm"
-                                   href="<%= request.getContextPath() %>/admin/question-bank?action=view&id=<%= q.getId() %>">
-                                    View
-                                </a>
-
-                                <a class="btn btn-sm"
-                                   href="<%= request.getContextPath() %>/admin/question-bank?action=edit&id=<%= q.getId() %>">
-                                    Edit
-                                </a>
-
-                                <a class="btn btn-sm"
-                                   href="<%= request.getContextPath() %>/admin/question-bank?action=options&questionId=<%= q.getId() %>">
-                                    Options
-                                </a>
-
-                                <a class="btn btn-sm btn-danger"
-                                   href="<%= request.getContextPath() %>/admin/question-bank?action=delete&id=<%= q.getId() %>"
-                                   onclick="return confirm('Deactivate this question?');">
-                                    Delete
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                    <% } %>
-
-                <% } %>
-
-                </tbody>
-
-            </table>
-
-        </div>
+        </table>
 
     </div>
 
