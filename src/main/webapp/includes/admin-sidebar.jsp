@@ -1,80 +1,315 @@
-
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
 <%
-    String contextPath = request.getContextPath();
-    String currentURI = request.getRequestURI();
+    String sidebarCurrentURI = request.getRequestURI();
+    String sidebarContextPath = request.getContextPath();
 
     boolean dashboardActive =
-        currentURI.contains("/admin/dashboard.jsp");
+            sidebarCurrentURI.contains("/admin/dashboard");
 
     boolean studentsActive =
-        currentURI.contains("/admin/students");
+            sidebarCurrentURI.contains("/admin/students");
 
     boolean teachersActive =
-        currentURI.contains("/admin/teachers");
+            sidebarCurrentURI.contains("/admin/teachers");
 
     boolean categoriesActive =
-        currentURI.contains("/admin/course-categories");
+            sidebarCurrentURI.contains("/admin/course-categories");
 
     boolean coursesActive =
-        currentURI.contains("/admin/courses");
+            sidebarCurrentURI.contains("/admin/courses");
 
     boolean batchesActive =
-        currentURI.contains("/admin/batches");
+            sidebarCurrentURI.contains("/admin/batches");
 
     boolean admissionsActive =
-        currentURI.contains("/admin/admissions");
+            sidebarCurrentURI.contains("/admin/admissions");
 
     boolean enrollmentsActive =
-        currentURI.contains("/admin/enrollments");
+            sidebarCurrentURI.contains("/admin/enrollments");
 
     boolean attendanceActive =
-        currentURI.contains("/admin/attendance");
+            sidebarCurrentURI.contains("/admin/attendance");
 
     boolean assignmentsActive =
-        currentURI.contains("/admin/assignments");
+            sidebarCurrentURI.contains("/admin/assignments");
 
     boolean examsActive =
-        currentURI.contains("/admin/exams");
+            sidebarCurrentURI.contains("/admin/exams");
 
     boolean resultsActive =
-    	    currentURI.contains("/admin/exam-results");
+            sidebarCurrentURI.contains("/admin/exam-results");
 
     boolean feesActive =
-        currentURI.contains("/admin/fees");
+            sidebarCurrentURI.contains("/admin/fees");
 
     boolean paymentsActive =
-        currentURI.contains("/admin/payments");
+            sidebarCurrentURI.contains("/admin/payments");
 
     boolean certificatesActive =
-        currentURI.contains("/admin/certificates");
+            sidebarCurrentURI.contains("/admin/certificates");
 
     boolean announcementsActive =
-        currentURI.contains("/admin/announcements");
+            sidebarCurrentURI.contains("/admin/announcements");
 
     boolean notificationsActive =
-        currentURI.contains("/admin/notifications");
+            sidebarCurrentURI.contains("/admin/notifications");
 
     boolean enquiriesActive =
-        currentURI.contains("/admin/enquiries");
+            sidebarCurrentURI.contains("/admin/enquiries");
 
     boolean reportsActive =
-        currentURI.contains("/admin/reports");
+            sidebarCurrentURI.contains("/admin/reports");
 
     boolean settingsActive =
-        currentURI.contains("/admin/settings");
+            sidebarCurrentURI.contains("/admin/settings");
 %>
+
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f7fb;
+    }
+
+    .admin-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+
+        width: 260px;
+
+        background: #111827;
+        color: white;
+
+        display: flex;
+        flex-direction: column;
+
+        overflow-y: auto;
+
+        z-index: 1000;
+
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.12);
+    }
+
+    .sidebar-brand {
+        height: 75px;
+
+        display: flex;
+        align-items: center;
+
+        padding: 15px 20px;
+
+        border-bottom: 1px solid #273244;
+    }
+
+    .sidebar-brand-link {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        width: 100%;
+
+        color: white;
+        text-decoration: none;
+    }
+
+    .sidebar-logo {
+        width: 42px;
+        height: 42px;
+
+        border-radius: 10px;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 23px;
+    }
+
+    .sidebar-brand-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-brand-text strong {
+        font-size: 20px;
+        line-height: 1.2;
+    }
+
+    .sidebar-brand-text span {
+        color: #9ca3af;
+        font-size: 12px;
+        margin-top: 3px;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+
+        padding: 15px 12px;
+    }
+
+    .sidebar-section {
+        margin-bottom: 20px;
+    }
+
+    .sidebar-section-title {
+        color: #6b7280;
+
+        font-size: 11px;
+        font-weight: bold;
+
+        letter-spacing: 1px;
+
+        padding: 8px 12px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        width: 100%;
+
+        padding: 11px 13px;
+
+        margin-bottom: 4px;
+
+        border-radius: 8px;
+
+        color: #d1d5db;
+
+        text-decoration: none;
+
+        font-size: 14px;
+
+        transition: 0.2s ease;
+    }
+
+    .sidebar-link:hover {
+        background: #1f2937;
+        color: white;
+    }
+
+    .sidebar-link.active {
+        background: #2563eb;
+        color: white;
+
+        font-weight: 600;
+
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+
+    .sidebar-icon {
+        width: 25px;
+
+        text-align: center;
+
+        font-size: 17px;
+
+        flex-shrink: 0;
+    }
+
+    .sidebar-link-text {
+        white-space: nowrap;
+    }
+
+    .sidebar-footer {
+        padding: 12px;
+
+        border-top: 1px solid #273244;
+    }
+
+    .sidebar-logout {
+        color: #fca5a5;
+    }
+
+    .sidebar-logout:hover {
+        background: #3f1d1d;
+        color: #fecaca;
+    }
+
+
+    /* MAIN CONTENT */
+
+    .admin-main {
+        margin-left: 260px;
+
+        min-height: 100vh;
+
+        padding: 30px;
+    }
+
+
+    /* MOBILE */
+
+    @media (max-width: 900px) {
+
+        .admin-sidebar {
+            width: 220px;
+        }
+
+        .admin-main {
+            margin-left: 220px;
+        }
+    }
+
+    @media (max-width: 700px) {
+
+        .admin-sidebar {
+            width: 70px;
+        }
+
+        .sidebar-brand-text,
+        .sidebar-section-title,
+        .sidebar-link-text {
+            display: none;
+        }
+
+        .sidebar-brand {
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .sidebar-brand-link {
+            justify-content: center;
+        }
+
+        .sidebar-link {
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .sidebar-icon {
+            font-size: 19px;
+        }
+
+        .admin-main {
+            margin-left: 70px;
+            padding: 20px;
+        }
+    }
+
+</style>
+
 
 <aside class="admin-sidebar" id="adminSidebar">
 
-    <!-- =====================================================
-         SIDEBAR BRAND
-         ===================================================== -->
+    <!-- BRAND -->
 
     <div class="sidebar-brand">
 
-        <a href="<%= contextPath %>/admin/dashboard.jsp"
+        <a href="<%= sidebarContextPath %>/admin/dashboard.jsp"
            class="sidebar-brand-link">
 
             <div class="sidebar-logo">
@@ -82,11 +317,8 @@
             </div>
 
             <div class="sidebar-brand-text">
-
                 <strong>FoxBrain</strong>
-
                 <span>Institute Admin</span>
-
             </div>
 
         </a>
@@ -94,16 +326,12 @@
     </div>
 
 
-    <!-- =====================================================
-         SIDEBAR NAVIGATION
-         ===================================================== -->
+    <!-- NAVIGATION -->
 
     <nav class="sidebar-nav">
 
 
-        <!-- =================================================
-             MAIN
-             ================================================= -->
+        <!-- MAIN -->
 
         <div class="sidebar-section">
 
@@ -111,25 +339,18 @@
                 MAIN
             </div>
 
-            <a href="<%= contextPath %>/admin/dashboard.jsp"
+            <a href="<%= sidebarContextPath %>/admin/dashboard.jsp"
                class="sidebar-link <%= dashboardActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    🏠
-                </span>
-
-                <span class="sidebar-link-text">
-                    Dashboard
-                </span>
+                <span class="sidebar-icon">🏠</span>
+                <span class="sidebar-link-text">Dashboard</span>
 
             </a>
 
         </div>
 
 
-        <!-- =================================================
-             ACADEMIC
-             ================================================= -->
+        <!-- ACADEMIC -->
 
         <div class="sidebar-section">
 
@@ -138,150 +359,94 @@
             </div>
 
 
-            <!-- Students -->
-
-            <a href="<%= contextPath %>/admin/students"
+            <a href="<%= sidebarContextPath %>/admin/students"
                class="sidebar-link <%= studentsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    👨‍🎓
-                </span>
-
-                <span class="sidebar-link-text">
-                    Students
-                </span>
+                <span class="sidebar-icon">👨‍🎓</span>
+                <span class="sidebar-link-text">Students</span>
 
             </a>
 
 
-            <!-- Teachers -->
-
-            <a href="<%= contextPath %>/admin/teachers"
+            <a href="<%= sidebarContextPath %>/admin/teachers"
                class="sidebar-link <%= teachersActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    👨‍🏫
-                </span>
-
-                <span class="sidebar-link-text">
-                    Teachers
-                </span>
+                <span class="sidebar-icon">👨‍🏫</span>
+                <span class="sidebar-link-text">Teachers</span>
 
             </a>
 
 
-            <!-- Course Categories -->
-
-            <a href="<%= contextPath %>/admin/course-categories"
+            <a href="<%= sidebarContextPath %>/admin/course-categories"
                class="sidebar-link <%= categoriesActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📚
-                </span>
-
-                <span class="sidebar-link-text">
-                    Course Categories
-                </span>
+                <span class="sidebar-icon">📚</span>
+                <span class="sidebar-link-text">Course Categories</span>
 
             </a>
 
 
-            <!-- Courses -->
+            <a href="<%= sidebarContextPath %>/admin/courses"
+               class="sidebar-link <%= coursesActive ? "active" : "" %>">
 
-            <a href="<%= contextPath %>/admin/courses"
-   class="sidebar-link <%= coursesActive ? "active" : "" %>">
+                <span class="sidebar-icon">📖</span>
+                <span class="sidebar-link-text">Courses</span>
 
-    <span class="sidebar-icon">📖</span>
-    <span class="sidebar-link-text">Courses</span>
+            </a>
 
-</a>
 
-            <!-- Batches -->
-
-            <a href="<%= contextPath %>/admin/batches"
+            <a href="<%= sidebarContextPath %>/admin/batches"
                class="sidebar-link <%= batchesActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    🗂️
-                </span>
-
-                <span class="sidebar-link-text">
-                    Batches
-                </span>
+                <span class="sidebar-icon">🗂️</span>
+                <span class="sidebar-link-text">Batches</span>
 
             </a>
 
 
-            <!-- Attendance -->
-
-            <a href="<%= contextPath %>/admin/attendance"
+            <a href="<%= sidebarContextPath %>/admin/attendance"
                class="sidebar-link <%= attendanceActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📝
-                </span>
-
-                <span class="sidebar-link-text">
-                    Attendance
-                </span>
+                <span class="sidebar-icon">📝</span>
+                <span class="sidebar-link-text">Attendance</span>
 
             </a>
 
 
-            <!-- Assignments -->
-
-            <a href="<%= contextPath %>/admin/assignments"
+            <a href="<%= sidebarContextPath %>/admin/assignments"
                class="sidebar-link <%= assignmentsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📋
-                </span>
-
-                <span class="sidebar-link-text">
-                    Assignments
-                </span>
+                <span class="sidebar-icon">📋</span>
+                <span class="sidebar-link-text">Assignments</span>
 
             </a>
 
 
-            <!-- Exams -->
+            <!-- EXAMS -->
 
-            <a href="<%= contextPath %>/admin/exams"
+            <a href="<%= sidebarContextPath %>/admin/exams"
                class="sidebar-link <%= examsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    🧾
-                </span>
-
-                <span class="sidebar-link-text">
-                    Exams
-                </span>
+                <span class="sidebar-icon">📝</span>
+                <span class="sidebar-link-text">Exams</span>
 
             </a>
 
 
-            <!-- Results -->
-<!-- Results -->
+            <!-- RESULTS -->
 
-<a href="<%= contextPath %>/admin/exam-results"
-   class="sidebar-link <%= resultsActive ? "active" : "" %>">
+            <a href="<%= sidebarContextPath %>/admin/exam-results"
+               class="sidebar-link <%= resultsActive ? "active" : "" %>">
 
-    <span class="sidebar-icon">
-        📊
-    </span>
+                <span class="sidebar-icon">📊</span>
+                <span class="sidebar-link-text">Results</span>
 
-    <span class="sidebar-link-text">
-        Results
-    </span>
-
-</a>
+            </a>
 
         </div>
 
 
-        <!-- =================================================
-             ADMISSIONS
-             ================================================= -->
+        <!-- ADMISSIONS -->
 
         <div class="sidebar-section">
 
@@ -290,43 +455,27 @@
             </div>
 
 
-            <!-- Admissions -->
-
-            <a href="<%= contextPath %>/admin/admissions"
+            <a href="<%= sidebarContextPath %>/admin/admissions"
                class="sidebar-link <%= admissionsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📨
-                </span>
-
-                <span class="sidebar-link-text">
-                    Admissions
-                </span>
+                <span class="sidebar-icon">📨</span>
+                <span class="sidebar-link-text">Admissions</span>
 
             </a>
 
 
-            <!-- Enrollments -->
-
-            <a href="<%= contextPath %>/admin/enrollments"
+            <a href="<%= sidebarContextPath %>/admin/enrollments"
                class="sidebar-link <%= enrollmentsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    🎓
-                </span>
-
-                <span class="sidebar-link-text">
-                    Enrollments
-                </span>
+                <span class="sidebar-icon">🎓</span>
+                <span class="sidebar-link-text">Enrollments</span>
 
             </a>
 
         </div>
 
 
-        <!-- =================================================
-             LEARNING
-             ================================================= -->
+        <!-- LEARNING -->
 
         <div class="sidebar-section">
 
@@ -334,28 +483,18 @@
                 LEARNING
             </div>
 
-
-            <!-- Certificates -->
-
-            <a href="<%= contextPath %>/admin/certificates"
+            <a href="<%= sidebarContextPath %>/admin/certificates"
                class="sidebar-link <%= certificatesActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    🏆
-                </span>
-
-                <span class="sidebar-link-text">
-                    Certificates
-                </span>
+                <span class="sidebar-icon">🏆</span>
+                <span class="sidebar-link-text">Certificates</span>
 
             </a>
 
         </div>
 
 
-        <!-- =================================================
-             FINANCE
-             ================================================= -->
+        <!-- FINANCE -->
 
         <div class="sidebar-section">
 
@@ -364,43 +503,27 @@
             </div>
 
 
-            <!-- Fees -->
-
-            <a href="<%= contextPath %>/admin/fees"
+            <a href="<%= sidebarContextPath %>/admin/fees"
                class="sidebar-link <%= feesActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    💰
-                </span>
-
-                <span class="sidebar-link-text">
-                    Fees
-                </span>
+                <span class="sidebar-icon">💰</span>
+                <span class="sidebar-link-text">Fees</span>
 
             </a>
 
 
-            <!-- Payments -->
-
-            <a href="<%= contextPath %>/admin/payments"
+            <a href="<%= sidebarContextPath %>/admin/payments"
                class="sidebar-link <%= paymentsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    💳
-                </span>
-
-                <span class="sidebar-link-text">
-                    Payments
-                </span>
+                <span class="sidebar-icon">💳</span>
+                <span class="sidebar-link-text">Payments</span>
 
             </a>
 
         </div>
 
 
-        <!-- =================================================
-             MANAGEMENT
-             ================================================= -->
+        <!-- MANAGEMENT -->
 
         <div class="sidebar-section">
 
@@ -409,82 +532,47 @@
             </div>
 
 
-            <!-- Announcements -->
-
-            <a href="<%= contextPath %>/admin/announcements"
+            <a href="<%= sidebarContextPath %>/admin/announcements"
                class="sidebar-link <%= announcementsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📢
-                </span>
-
-                <span class="sidebar-link-text">
-                    Announcements
-                </span>
+                <span class="sidebar-icon">📢</span>
+                <span class="sidebar-link-text">Announcements</span>
 
             </a>
 
 
-            <!-- Notifications -->
-
-            <a href="<%= contextPath %>/admin/notifications"
+            <a href="<%= sidebarContextPath %>/admin/notifications"
                class="sidebar-link <%= notificationsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    🔔
-                </span>
-
-                <span class="sidebar-link-text">
-                    Notifications
-                </span>
+                <span class="sidebar-icon">🔔</span>
+                <span class="sidebar-link-text">Notifications</span>
 
             </a>
 
 
-            <!-- Enquiries -->
-
-            <a href="<%= contextPath %>/admin/enquiries"
+            <a href="<%= sidebarContextPath %>/admin/enquiries"
                class="sidebar-link <%= enquiriesActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    💬
-                </span>
-
-                <span class="sidebar-link-text">
-                    Enquiries
-                </span>
+                <span class="sidebar-icon">💬</span>
+                <span class="sidebar-link-text">Enquiries</span>
 
             </a>
 
 
-            <!-- Reports -->
-
-            <a href="<%= contextPath %>/admin/reports"
+            <a href="<%= sidebarContextPath %>/admin/reports"
                class="sidebar-link <%= reportsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    📈
-                </span>
-
-                <span class="sidebar-link-text">
-                    Reports
-                </span>
+                <span class="sidebar-icon">📈</span>
+                <span class="sidebar-link-text">Reports</span>
 
             </a>
 
 
-            <!-- Settings -->
-
-            <a href="<%= contextPath %>/admin/settings"
+            <a href="<%= sidebarContextPath %>/admin/settings"
                class="sidebar-link <%= settingsActive ? "active" : "" %>">
 
-                <span class="sidebar-icon">
-                    ⚙️
-                </span>
-
-                <span class="sidebar-link-text">
-                    Settings
-                </span>
+                <span class="sidebar-icon">⚙️</span>
+                <span class="sidebar-link-text">Settings</span>
 
             </a>
 
@@ -493,22 +581,15 @@
     </nav>
 
 
-    <!-- =====================================================
-         SIDEBAR FOOTER
-         ===================================================== -->
+    <!-- FOOTER -->
 
     <div class="sidebar-footer">
 
-        <a href="<%= contextPath %>/logout"
+        <a href="<%= sidebarContextPath %>/logout"
            class="sidebar-link sidebar-logout">
 
-            <span class="sidebar-icon">
-                🚪
-            </span>
-
-            <span class="sidebar-link-text">
-                Logout
-            </span>
+            <span class="sidebar-icon">🚪</span>
+            <span class="sidebar-link-text">Logout</span>
 
         </a>
 
